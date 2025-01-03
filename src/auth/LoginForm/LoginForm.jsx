@@ -90,7 +90,7 @@ const LoginForm = ({ onLogin }) => {
              textShadow: '0 0 20px rgba(0, 255, 209, 0.3)',
            }}
          >
-           Operaciones Royal Trade Club
+           Operaciones Royal Markets
          </Typography>
        </Box>
 
