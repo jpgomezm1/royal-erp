@@ -95,7 +95,7 @@ const Navbar = ({ onLogout }) => {
                  letterSpacing: '0.5px'
                }}
              >
-               Royal Trade Club
+               Royal Markets
              </Typography>
            </Box>
          </Link>
