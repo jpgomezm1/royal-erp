@@ -19,53 +19,70 @@ import {
   Person as PersonIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
-  Source as SourceIcon
+  Source as SourceIcon,
+  Public as PublicIcon
 } from '@mui/icons-material';
-import { leadSources, interestOptions } from '../leadConstants';
+import { leadSources, interestOptions, countries } from '../leadConstants';
 
 const initialLeadState = {
   nombre: '',
   telefono: '',
   email: '',
+  pais: '',
   fuente: '',
   interes: [],
-  presupuesto: '',
   notas: '',
   stage: 'LEAD',
-  logs: [],
-  reminders: []
 };
 
 const NewLeadDialog = ({ open, onClose, onSave }) => {
   const [leadData, setLeadData] = useState(initialLeadState);
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
     if (!leadData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
     if (!leadData.telefono.trim()) newErrors.telefono = 'El teléfono es requerido';
     if (!leadData.email.trim()) newErrors.email = 'El email es requerido';
+    if (!leadData.pais) newErrors.pais = 'El país es requerido';
     if (!leadData.fuente) newErrors.fuente = 'La fuente es requerida';
-    if (leadData.interes.length === 0) newErrors.interes = 'Selecciona al menos un interés';
+    if (leadData.interes.length === 0) newErrors.interes = 'Selecciona al menos un producto';
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (leadData.email && !emailRegex.test(leadData.email)) {
+      newErrors.email = 'Email inválido';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      onSave({
-        ...leadData,
-        createdAt: new Date().toISOString(),
-      });
-      setLeadData(initialLeadState);
-      onClose();
+      setIsSubmitting(true);
+      try {
+        const formattedData = {
+          ...leadData,
+          stage: 'LEAD',
+          created_at: new Date().toISOString()
+        };
+
+        await onSave(formattedData);
+        handleClose();
+      } catch (error) {
+        console.error('Error al guardar lead:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
   const handleClose = () => {
     setLeadData(initialLeadState);
     setErrors({});
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -101,6 +118,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             onChange={(e) => setLeadData({ ...leadData, nombre: e.target.value })}
             error={!!errors.nombre}
             helperText={errors.nombre}
+            disabled={isSubmitting}
             InputProps={{
               sx: { color: '#FFFFFF' }
             }}
@@ -121,6 +139,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             onChange={(e) => setLeadData({ ...leadData, telefono: e.target.value })}
             error={!!errors.telefono}
             helperText={errors.telefono}
+            disabled={isSubmitting}
             InputProps={{
               sx: { color: '#FFFFFF' },
               startAdornment: <PhoneIcon sx={{ mr: 1, color: '#00FFD1' }} />,
@@ -142,6 +161,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             onChange={(e) => setLeadData({ ...leadData, email: e.target.value })}
             error={!!errors.email}
             helperText={errors.email}
+            disabled={isSubmitting}
             InputProps={{
               sx: { color: '#FFFFFF' },
               startAdornment: <EmailIcon sx={{ mr: 1, color: '#00FFD1' }} />,
@@ -157,7 +177,32 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             }}
           />
 
-          <FormControl error={!!errors.fuente}>
+          <FormControl error={!!errors.pais} disabled={isSubmitting}>
+            <InputLabel sx={{ color: '#FFFFFF' }}>País</InputLabel>
+            <Select
+              value={leadData.pais}
+              onChange={(e) => setLeadData({ ...leadData, pais: e.target.value })}
+              startAdornment={<PublicIcon sx={{ mr: 1, color: '#00FFD1' }} />}
+              sx={{
+                color: '#FFFFFF',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.23)'
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#FFFFFF'
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#00FFD1'
+                }
+              }}
+            >
+              {countries.map((country) => (
+                <MenuItem key={country} value={country}>{country}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl error={!!errors.fuente} disabled={isSubmitting}>
             <InputLabel sx={{ color: '#FFFFFF' }}>Fuente</InputLabel>
             <Select
               value={leadData.fuente}
@@ -182,19 +227,23 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             </Select>
           </FormControl>
 
-          <FormControl error={!!errors.interes} sx={{ gridColumn: '1 / -1' }}>
-            <InputLabel sx={{ color: '#FFFFFF' }}>Intereses</InputLabel>
+          <FormControl 
+            error={!!errors.interes} 
+            sx={{ gridColumn: '1 / -1' }}
+            disabled={isSubmitting}
+          >
+            <InputLabel sx={{ color: '#FFFFFF' }}>Productos de interés</InputLabel>
             <Select
               multiple
               value={leadData.interes}
               onChange={(e) => setLeadData({ ...leadData, interes: e.target.value })}
-              input={<OutlinedInput label="Intereses" />}
+              input={<OutlinedInput label="Productos de interés" />}
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {selected.map((value) => (
                     <Chip 
                       key={value} 
-                      label={value} 
+                      label={value === 'Club Privado' ? 'Club Privado (75 USD)' : 'Plan Anual (270 USD)'} 
                       sx={{ 
                         backgroundColor: '#00FFD1',
                         color: '#1E1E1E'
@@ -217,31 +266,12 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
               }}
             >
               {interestOptions.map((option) => (
-                <MenuItem key={option} value={option}>{option}</MenuItem>
+                <MenuItem key={option} value={option}>
+                  {option === 'Club Privado' ? 'Club Privado (75 USD)' : 'Plan Anual (270 USD)'}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
-
-          <TextField
-            label="Presupuesto estimado"
-            value={leadData.presupuesto}
-            onChange={(e) => setLeadData({ ...leadData, presupuesto: e.target.value })}
-            type="number"
-            InputProps={{
-              sx: { color: '#FFFFFF' },
-              startAdornment: <Box sx={{ color: '#00FFD1', mr: 1 }}>$</Box>,
-            }}
-            sx={{
-              gridColumn: '1 / -1',
-              '& label': { color: '#FFFFFF' },
-              '& label.Mui-focused': { color: '#00FFD1' },
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                '&:hover fieldset': { borderColor: '#FFFFFF' },
-                '&.Mui-focused fieldset': { borderColor: '#00FFD1' },
-              },
-            }}
-          />
 
           <TextField
             label="Notas iniciales"
@@ -249,6 +279,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             rows={4}
             value={leadData.notas}
             onChange={(e) => setLeadData({ ...leadData, notas: e.target.value })}
+            disabled={isSubmitting}
             sx={{
               gridColumn: '1 / -1',
               '& label': { color: '#FFFFFF' },
@@ -267,12 +298,14 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
         <Button 
           onClick={handleClose}
           sx={{ color: '#FFFFFF' }}
+          disabled={isSubmitting}
         >
           Cancelar
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
+          disabled={isSubmitting}
           sx={{
             backgroundColor: '#00FFD1',
             color: '#1E1E1E',
@@ -281,7 +314,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             },
           }}
         >
-          Guardar Lead
+          {isSubmitting ? 'Guardando...' : 'Guardar Lead'}
         </Button>
       </DialogActions>
     </Dialog>

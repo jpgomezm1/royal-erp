@@ -46,11 +46,8 @@ export const pipelineStages = {
   ];
   
   export const interestOptions = [
-    'Curso Básico',
-    'Curso Avanzado',
-    'Comunidad Trading',
-    'Mentoria 1:1',
-    'Señales de Trading'
+    'Club Privado',
+    'Plan Anual'
   ];
   
   export const logTypes = {
@@ -59,4 +56,31 @@ export const pipelineStages = {
     EMAIL: { label: 'Email', icon: 'EmailIcon' },
     MEETING: { label: 'Reunión', icon: 'VideocamIcon' },
     OTHER: { label: 'Otro', icon: 'MoreHorizIcon' }
+  };
+
+  export const countries = [
+    'Argentina',
+    'Bolivia',
+    'Chile',
+    'Colombia',
+    'Costa Rica',
+    'Ecuador',
+    'El Salvador',
+    'España',
+    'Guatemala',
+    'Honduras',
+    'México',
+    'Nicaragua',
+    'Panamá',
+    'Paraguay',
+    'Perú',
+    'República Dominicana',
+    'Uruguay',
+    'Venezuela',
+    'Otro'
+  ];
+  
+  export const productPrices = {
+    'Club Privado': 75,
+    'Plan Anual': 270
   };

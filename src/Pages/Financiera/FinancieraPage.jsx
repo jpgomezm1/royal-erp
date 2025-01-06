@@ -5,9 +5,10 @@ import {
   Tab, 
   Typography 
 } from '@mui/material';
-import LeadTracker from './components/LeadTracker/LeadTracker';
-import CRM from './components/CRM/CRM'
-import MetricasComerciales from './components/MetricasComerciales/MetricasComerciales';
+import Ingresos from './components/Ingresos/Ingresos';
+import Egresos from './components/Egresos/Egresos';
+import Resultados from './components/Resultados/Resultados';
+import Data from './components/Data/Data';
 
 const TabPanel = (props) => {
   const { children, value, index, ...other } = props;
@@ -16,8 +17,8 @@ const TabPanel = (props) => {
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`comercial-tabpanel-${index}`}
-      aria-labelledby={`comercial-tab-${index}`}
+      id={`financiera-tabpanel-${index}`}
+      aria-labelledby={`financiera-tab-${index}`}
       {...other}
     >
       {value === index && (
@@ -29,7 +30,7 @@ const TabPanel = (props) => {
   );
 };
 
-const ComercialPage = () => {
+const FinancieraPage = () => {
   const [currentTab, setCurrentTab] = useState(0);
 
   const handleTabChange = (event, newValue) => {
@@ -61,7 +62,7 @@ const ComercialPage = () => {
                 fontWeight: currentTab === 0 ? 600 : 400,
                 textTransform: 'none',
               }}>
-                Lead Tracker
+                Ingresos
               </Typography>
             } 
           />
@@ -72,7 +73,7 @@ const ComercialPage = () => {
                 fontWeight: currentTab === 1 ? 600 : 400,
                 textTransform: 'none',
               }}>
-                CRM
+                Egresos
               </Typography>
             } 
           />
@@ -83,7 +84,18 @@ const ComercialPage = () => {
                 fontWeight: currentTab === 2 ? 600 : 400,
                 textTransform: 'none',
               }}>
-                Métricas Comerciales
+                Resultados
+              </Typography>
+            } 
+          />
+          <Tab 
+            label={
+              <Typography sx={{ 
+                fontSize: '1rem',
+                fontWeight: currentTab === 3 ? 600 : 400,
+                textTransform: 'none',
+              }}>
+                Data
               </Typography>
             } 
           />
@@ -91,17 +103,19 @@ const ComercialPage = () => {
       </Box>
 
       <TabPanel value={currentTab} index={0}>
-        <LeadTracker />
+        <Ingresos />
       </TabPanel>
       <TabPanel value={currentTab} index={1}>
-        <CRM />
+        <Egresos />
       </TabPanel>
       <TabPanel value={currentTab} index={2}>
-        <MetricasComerciales />
+        <Resultados />
+      </TabPanel>
+      <TabPanel value={currentTab} index={3}>
+        <Data />
       </TabPanel>
     </Box>
   );
 };
 
-export default ComercialPage;
-
+export default FinancieraPage;

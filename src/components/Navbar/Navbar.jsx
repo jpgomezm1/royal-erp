@@ -69,7 +69,7 @@ const Navbar = ({ onLogout }) => {
            gap: 2
          }}
        >
-         <Link to="/" style={{ textDecoration: 'none' }}>
+         <Link to="/comercial" style={{ textDecoration: 'none' }}>
            <Box sx={{ 
              display: 'flex', 
              flexDirection: 'column', 

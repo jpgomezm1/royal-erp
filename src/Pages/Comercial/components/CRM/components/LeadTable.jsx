@@ -24,12 +24,10 @@ import {
 import { DateTime } from 'luxon';
 
 const statusColors = {
-  STUDENT: { color: '#00FFD1', label: 'Estudiante Activo' },
-  LEAD: { color: '#FFC107', label: 'Lead Nuevo' },
-  CONTACTED: { color: '#2196F3', label: 'Contactado' },
-  INTERESTED: { color: '#9C27B0', label: 'Interesado' },
-  ENROLLED: { color: '#4CAF50', label: 'Matriculado' },
-  LOST: { color: '#F44336', label: 'Perdido' },
+  LEAD:            { color: '#FFC107', label: 'Lead Potencial' },
+  CLIENTE_INACTIVO:{ color: '#29B6F6', label: 'Cliente Inactivo' },
+  CLIENTE_ACTIVO:  { color: '#4CAF50', label: 'Cliente Activo' },
+  EX_CLIENTE:      { color: '#F44336', label: 'Ex Cliente' },
 };
 
 const LeadTable = ({ leads, onLeadClick, filters }) => {
@@ -54,15 +52,17 @@ const LeadTable = ({ leads, onLeadClick, filters }) => {
       .slice(0, 2);
   };
 
-  const formatLastContact = (date) => {
-    return DateTime.fromISO(date).toRelative({ locale: 'es' });
+  const formatLastContact = (isoDate) => {
+    if (!isoDate) return 'Sin actividad';
+    return DateTime.fromISO(isoDate).toRelative({ locale: 'es' });
   };
 
+  // Aquí filtramos en frontend (muy básico) por status y source
   const filterLeads = (leads) => {
     return leads.filter(lead => {
-      if (filters.status !== 'all' && lead.status !== filters.status) return false;
-      if (filters.source !== 'all' && lead.source !== filters.source) return false;
-      // Agrega más filtros según necesites
+      // lead.crm_status => 'LEAD', 'CLIENTE_INACTIVO', etc.
+      if (filters.status !== 'all' && lead.crm_status !== filters.status) return false;
+      if (filters.source !== 'all' && lead.fuente !== filters.source) return false;
       return true;
     });
   };
@@ -75,10 +75,11 @@ const LeadTable = ({ leads, onLeadClick, filters }) => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ color: '#FFFFFF' }}>Lead</TableCell>
-              <TableCell sx={{ color: '#FFFFFF' }}>Estado</TableCell>
+              <TableCell sx={{ color: '#FFFFFF' }}>Nombre</TableCell>
+              <TableCell sx={{ color: '#FFFFFF' }}>Estado (CRM)</TableCell>
               <TableCell sx={{ color: '#FFFFFF' }}>Fuente</TableCell>
-              <TableCell sx={{ color: '#FFFFFF' }}>Último Contacto</TableCell>
+              <TableCell sx={{ color: '#FFFFFF' }}>País</TableCell>
+              <TableCell sx={{ color: '#FFFFFF' }}>Última Actividad</TableCell>
               <TableCell sx={{ color: '#FFFFFF' }}>Programa</TableCell>
               <TableCell sx={{ color: '#FFFFFF' }}>Valor</TableCell>
               <TableCell sx={{ color: '#FFFFFF' }}>Acciones</TableCell>
@@ -88,10 +89,10 @@ const LeadTable = ({ leads, onLeadClick, filters }) => {
             {filteredLeads
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((lead) => (
-                <TableRow 
+                <TableRow
                   key={lead.id}
-                  sx={{ 
-                    '&:hover': { 
+                  sx={{
+                    '&:hover': {
                       backgroundColor: 'rgba(0, 255, 209, 0.05)',
                       cursor: 'pointer'
                     }
@@ -99,10 +100,10 @@ const LeadTable = ({ leads, onLeadClick, filters }) => {
                 >
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar 
-                        sx={{ 
-                          bgcolor: lead.status === 'STUDENT' ? '#00FFD1' : '#2C2C2C',
-                          color: lead.status === 'STUDENT' ? '#1E1E1E' : '#FFFFFF',
+                      <Avatar
+                        sx={{
+                          bgcolor: lead.crm_status === 'CLIENTE_ACTIVO' ? '#00FFD1' : '#2C2C2C',
+                          color: lead.crm_status === 'CLIENTE_ACTIVO' ? '#1E1E1E' : '#FFFFFF',
                           border: '2px solid #00FFD1'
                         }}
                       >
@@ -118,22 +119,28 @@ const LeadTable = ({ leads, onLeadClick, filters }) => {
                       </Box>
                     </Box>
                   </TableCell>
+
                   <TableCell>
                     <Chip
-                      icon={lead.status === 'STUDENT' ? <SchoolIcon /> : <CircleIcon sx={{ fontSize: '12px !important' }} />}
-                      label={statusColors[lead.status].label}
+                      icon={
+                        lead.crm_status === 'CLIENTE_ACTIVO'
+                          ? <SchoolIcon />
+                          : <CircleIcon sx={{ fontSize: '12px !important' }} />
+                      }
+                      label={statusColors[lead.crm_status].label}
                       sx={{
-                        backgroundColor: `${statusColors[lead.status].color}20`,
-                        color: statusColors[lead.status].color,
+                        backgroundColor: `${statusColors[lead.crm_status].color}20`,
+                        color: statusColors[lead.crm_status].color,
                         '& .MuiChip-icon': {
-                          color: statusColors[lead.status].color
+                          color: statusColors[lead.crm_status].color
                         }
                       }}
                     />
                   </TableCell>
+
                   <TableCell>
                     <Chip
-                      label={lead.source}
+                      label={lead.fuente}
                       size="small"
                       sx={{
                         backgroundColor: 'rgba(0, 255, 209, 0.1)',
@@ -141,27 +148,41 @@ const LeadTable = ({ leads, onLeadClick, filters }) => {
                       }}
                     />
                   </TableCell>
+
+                  {/* NUEVA COLUMNA: País */}
+                  <TableCell>
+                    <Typography sx={{ color: '#FFFFFF' }}>
+                      {lead.pais || 'N/D'}
+                    </Typography>
+                  </TableCell>
+
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <TimeIcon sx={{ color: '#AAAAAA', fontSize: '1rem' }} />
                       <Typography sx={{ color: '#FFFFFF' }}>
-                        {formatLastContact(lead.lastContact)}
+                        {formatLastContact(
+                          lead.logs && lead.logs.length > 0
+                            ? lead.logs[lead.logs.length - 1].date
+                            : null
+                        )}
                       </Typography>
                     </Box>
                   </TableCell>
+
                   <TableCell>
                     <Typography sx={{ color: '#FFFFFF' }}>
-                      {lead.program || 'No definido'}
+                      {lead.deal ? 'Tiene Deal' : 'Sin Deal'}
                     </Typography>
                   </TableCell>
+
                   <TableCell>
                     <Typography sx={{ color: '#00FFD1', fontWeight: 600 }}>
-                      ${lead.totalPaid?.toLocaleString() || '0'}
+                      {lead.deal ? `$${lead.deal.monto_total || 0}` : '$0'}
                     </Typography>
                   </TableCell>
+
                   <TableCell>
                     <Tooltip title="Ver detalles">
-                      <IconButton 
+                      <IconButton
                         onClick={() => onLeadClick(lead)}
                         sx={{ color: '#00FFD1' }}
                       >
@@ -174,7 +195,7 @@ const LeadTable = ({ leads, onLeadClick, filters }) => {
           </TableBody>
         </Table>
       </TableContainer>
-      
+
       <TablePagination
         component="div"
         count={filteredLeads.length}

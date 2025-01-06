@@ -15,45 +15,66 @@ import {
   AttachMoney as MoneyIcon,
 } from '@mui/icons-material';
 
+/**
+ * Filtramos leads por crm_status:
+ *  - LEAD
+ *  - CLIENTE_INACTIVO
+ *  - CLIENTE_ACTIVO
+ *  - EX_CLIENTE
+ */
+
 const SummaryCards = ({ leads }) => {
-  // Cálculos de estadísticas
+  // Cálculos de estadísticas basados en 'crm_status'
   const totalLeads = leads.length;
-  const activeStudents = leads.filter(lead => lead.status === 'STUDENT').length;
-  const totalRevenue = leads
-    .filter(lead => lead.status === 'STUDENT')
-    .reduce((sum, lead) => sum + (lead.totalPaid || 0), 0);
-  const conversionRate = totalLeads > 0 
-    ? (activeStudents / totalLeads * 100).toFixed(1) 
+
+  // Ejemplo de conteo por cada estado
+  const totalLeadPotenciales = leads.filter(l => l.crm_status === 'LEAD').length;
+  const totalClientesActivos = leads.filter(l => l.crm_status === 'CLIENTE_ACTIVO').length;
+  const totalClientesInactivos = leads.filter(l => l.crm_status === 'CLIENTE_INACTIVO').length;
+  const totalExClientes = leads.filter(l => l.crm_status === 'EX_CLIENTE').length;
+
+  // Ejemplo de ingresos (sumando "monto_total" de los deals vigentes)
+  // Aquí cada lead con crm_status=CLIENTE_ACTIVO o CLIENTE_INACTIVO tiene un deal con "monto_total"
+  let totalRevenue = 0;
+  leads.forEach((lead) => {
+    if (lead.deal && (lead.crm_status === 'CLIENTE_ACTIVO' || lead.crm_status === 'CLIENTE_INACTIVO')) {
+      totalRevenue += lead.deal.monto_total || 0;
+    }
+  });
+
+  // Ejemplo de tasa de conversión: (CLIENTE_ACTIVO / totalLeads) * 100
+  const conversionRate = totalLeads > 0
+    ? (totalClientesActivos / totalLeads) * 100
     : 0;
 
   const cards = [
     {
-      title: 'Estudiantes Activos',
-      value: activeStudents,
+      title: 'Clientes Activos',
+      value: totalClientesActivos,
       icon: SchoolIcon,
       color: '#00FFD1',
-      secondaryText: `${conversionRate}% tasa de conversión`
+      secondaryText: `${conversionRate.toFixed(1)}% tasa de conversión`
     },
     {
-      title: 'Leads en Pipeline',
-      value: totalLeads - activeStudents,
+      title: 'Leads Potenciales',
+      value: totalLeadPotenciales,
       icon: PeopleIcon,
       color: '#FFC107',
-      secondaryText: 'Prospectos activos'
+      secondaryText: 'Están en etapa de prospección'
     },
     {
       title: 'Ingresos Totales',
       value: `$${totalRevenue.toLocaleString()}`,
       icon: MoneyIcon,
       color: '#4CAF50',
-      secondaryText: 'Valor total generado'
+      secondaryText: 'Suma de todos los deals vigentes'
     },
     {
-      title: 'Ticket Promedio',
-      value: `$${totalRevenue > 0 ? (totalRevenue / activeStudents).toLocaleString() : 0}`,
+      title: 'Clientes Inactivos / Ex',
+      value: totalClientesInactivos + totalExClientes,
       icon: TrendingUpIcon,
       color: '#2196F3',
-      secondaryText: 'Por estudiante activo'
+      secondaryText: 'Suscripciones futuras o vencidas'
     }
   ];
 
@@ -120,11 +141,12 @@ const SummaryCards = ({ leads }) => {
                 </Typography>
               </Box>
 
-              {card.title === 'Estudiantes Activos' && (
-                <Tooltip title="Tasa de conversión">
+              {/* Ejemplo: si quieres mostrar una barra de progreso en el primer card */}
+              {card.title === 'Clientes Activos' && (
+                <Tooltip title="Tasa de conversión (Clientes Activos / Total Leads)">
                   <LinearProgress
                     variant="determinate"
-                    value={Number(conversionRate)}
+                    value={Number(conversionRate.toFixed(1))}
                     sx={{
                       mt: 2,
                       height: 4,
