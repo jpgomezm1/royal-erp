@@ -234,43 +234,38 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
           >
             <InputLabel sx={{ color: '#FFFFFF' }}>Productos de interés</InputLabel>
             <Select
-              multiple
-              value={leadData.interes}
-              onChange={(e) => setLeadData({ ...leadData, interes: e.target.value })}
-              input={<OutlinedInput label="Productos de interés" />}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip 
-                      key={value} 
-                      label={value === 'Club Privado' ? 'Club Privado (75 USD)' : 'Plan Anual (270 USD)'} 
-                      sx={{ 
-                        backgroundColor: '#00FFD1',
-                        color: '#1E1E1E'
-                      }}
-                    />
-                  ))}
-                </Box>
-              )}
-              sx={{
-                color: '#FFFFFF',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255, 255, 255, 0.23)'
-                },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#FFFFFF'
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#00FFD1'
-                }
-              }}
-            >
-              {interestOptions.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option === 'Club Privado' ? 'Club Privado (75 USD)' : 'Plan Anual (270 USD)'}
-                </MenuItem>
-              ))}
-            </Select>
+  multiple
+  value={leadData.interes}
+  onChange={(e) => setLeadData({ ...leadData, interes: e.target.value })}
+  input={<OutlinedInput label="Productos de interés" />}
+  renderValue={(selected) => (
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+      {selected.map((value) => (
+        <Chip 
+          key={value} 
+          label={
+            value === 'Club Privado' ? 'Club Privado (75 USD)' :
+            value === 'Plan Anual' ? 'Plan Anual (270 USD)' :
+            'Instituto Royal (2990 USD)' 
+          }
+          sx={{ 
+            backgroundColor: '#00FFD1',
+            color: '#1E1E1E'
+          }}
+        />
+      ))}
+    </Box>
+  )}
+>
+  {interestOptions.map((option) => (
+    <MenuItem key={option} value={option}>
+      {option === 'Club Privado' ? 'Club Privado (75 USD)' :
+       option === 'Plan Anual' ? 'Plan Anual (270 USD)' :
+       'Instituto Royal (2990 USD)'}
+    </MenuItem>
+  ))}
+</Select>
+
           </FormControl>
 
           <TextField

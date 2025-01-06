@@ -29,6 +29,7 @@ import { PLATAFORMAS, PLATAFORMA_COLORS } from '../../../mockData';
 const CONCEPTOS = [
   { id: 'plan_anual', label: 'Plan Anual', monto: 270, type: 'fixed' },
   { id: 'club_privado', label: 'Club Privado', monto: 75, type: 'fixed' },
+  { id: 'instituto_royal', label: 'Instituto Royal', monto: 2990, type: 'fixed' }, // Nuevo producto
   { id: 'otros', label: 'Otros Ingresos', type: 'custom' }
 ];
 

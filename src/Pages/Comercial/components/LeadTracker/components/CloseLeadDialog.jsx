@@ -39,8 +39,10 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
   const [dealData, setDealData] = useState({
     club_privado: false,
     plan_anual: false,
+    instituto_royal: false,
     fecha_inicio_club: null,
     fecha_inicio_plan: null,
+    fecha_inicio_instituto: null,
     metodo_pago: '',
     monto_total: 0,
     pagos: [],
@@ -53,6 +55,7 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
     let total = 0;
     if (dealData.club_privado) total += 75;
     if (dealData.plan_anual) total += 270;
+    if (dealData.instituto_royal) total += 2990;
     return total;
   };
 
@@ -61,18 +64,17 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
       ...dealData,
       [product]: !dealData[product],
     };
-    
-    // Reset start date if product is unchecked
+
     if (!newState[product]) {
       newState[`fecha_inicio_${product.split('_')[1]}`] = null;
     }
-    
+
     setDealData(newState);
   };
 
   const handleAddPayment = () => {
     if (!newPayment.fecha_pago || !newPayment.monto) return;
-    
+
     setDealData({
       ...dealData,
       pagos: [...dealData.pagos, { ...newPayment }],
@@ -89,7 +91,7 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!dealData.club_privado && !dealData.plan_anual) {
+    if (!dealData.club_privado && !dealData.plan_anual && !dealData.instituto_royal) {
       newErrors.products = 'Selecciona al menos un producto';
     }
     if (dealData.club_privado && !dealData.fecha_inicio_club) {
@@ -98,13 +100,16 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
     if (dealData.plan_anual && !dealData.fecha_inicio_plan) {
       newErrors.fecha_inicio_plan = 'Selecciona la fecha de inicio';
     }
+    if (dealData.instituto_royal && !dealData.fecha_inicio_instituto) {
+      newErrors.fecha_inicio_instituto = 'Selecciona la fecha de inicio';
+    }
     if (!dealData.metodo_pago) {
       newErrors.metodo_pago = 'Selecciona un método de pago';
     }
     if (dealData.pagos.length === 0) {
       newErrors.pagos = 'Agrega al menos un pago programado';
     }
-    
+
     const totalPayments = dealData.pagos.reduce((sum, p) => sum + Number(p.monto), 0);
     const expectedTotal = calculateTotalAmount();
     if (totalPayments !== expectedTotal) {
@@ -121,6 +126,7 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
         ...dealData,
         fecha_inicio_club: dealData.fecha_inicio_club?.toISO(),
         fecha_inicio_plan: dealData.fecha_inicio_plan?.toISO(),
+        fecha_inicio_instituto: dealData.fecha_inicio_instituto?.toISO(),
         monto_total: calculateTotalAmount(),
         pagos: dealData.pagos.map(p => ({
           ...p,
@@ -164,7 +170,6 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
 
         <DialogContent>
           <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Productos */}
             <Box>
               <Typography variant="subtitle1" sx={{ mb: 1 }}>Productos</Typography>
               <Box sx={{ display: 'flex', gap: 2 }}>
@@ -247,13 +252,52 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                     />
                   )}
                 </Box>
+
+                <Box>
+                  <FormControlLabel
+                    control={
+                      <Checkbox 
+                        checked={dealData.instituto_royal}
+                        onChange={() => handleProductChange('instituto_royal')}
+                        sx={{ 
+                          color: '#00FFD1',
+                          '&.Mui-checked': {
+                            color: '#00FFD1',
+                          }
+                        }}
+                      />
+                    }
+                    label="Instituto Royal ($2990)"
+                  />
+                  {dealData.instituto_royal && (
+                    <DatePicker
+                      label="Fecha de inicio"
+                      value={dealData.fecha_inicio_instituto}
+                      onChange={(date) => setDealData({ ...dealData, fecha_inicio_instituto: date })}
+                      slotProps={{
+                        textField: {
+                          error: !!errors.fecha_inicio_instituto,
+                          helperText: errors.fecha_inicio_instituto,
+                          sx: {
+                            mt: 1,
+                            '& .MuiOutlinedInput-root': {
+                              color: '#FFFFFF',
+                              '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.23)' },
+                              '&:hover fieldset': { borderColor: '#FFFFFF' },
+                              '&.Mui-focused fieldset': { borderColor: '#00FFD1' },
+                            }
+                          }
+                        }
+                      }}
+                    />
+                  )}
+                </Box>
               </Box>
               {errors.products && (
                 <Typography color="error" variant="caption">{errors.products}</Typography>
               )}
             </Box>
 
-            {/* Método de pago */}
             <FormControl error={!!errors.metodo_pago}>
               <InputLabel sx={{ color: '#FFFFFF' }}>Método de pago</InputLabel>
               <Select
@@ -277,12 +321,10 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
               )}
             </FormControl>
 
-            {/* Pagos programados */}
             <Box>
               <Typography variant="subtitle1" sx={{ mb: 1 }}>
                 Pagos programados (Total: ${calculateTotalAmount()})
               </Typography>
-              
               <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                 <DatePicker
                   label="Fecha de pago"
@@ -360,7 +402,6 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                   </IconButton>
                 </Box>
               ))}
-              
               {errors.pagos && (
                 <Typography color="error" variant="caption">{errors.pagos}</Typography>
               )}

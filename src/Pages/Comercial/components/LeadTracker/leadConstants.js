@@ -47,7 +47,8 @@ export const pipelineStages = {
   
   export const interestOptions = [
     'Club Privado',
-    'Plan Anual'
+    'Plan Anual',
+    'Instituto Royal' // Nuevo producto
   ];
   
   export const logTypes = {
@@ -82,5 +83,6 @@ export const pipelineStages = {
   
   export const productPrices = {
     'Club Privado': 75,
-    'Plan Anual': 270
+    'Plan Anual': 270,
+    'Instituto Royal': 2990 // Precio del nuevo producto
   };
