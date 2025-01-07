@@ -202,3 +202,121 @@ export const ingresoService = {
     return response.json();
   },
 };
+
+
+export const egresoService = {
+  async getAllEgresos() {
+    const response = await fetch(`${API_BASE_URL}/financial/egresos/`);
+    if (!response.ok) throw new Error('Error fetching egresos');
+    return response.json();
+  },
+
+  async createEgreso(egresoData) {
+    const response = await fetch(`${API_BASE_URL}/financial/egresos/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(egresoData),
+    });
+    if (!response.ok) throw new Error('Error creating egreso');
+    return response.json();
+  },
+
+  async getEgresoStats(filters) {
+    const queryParams = new URLSearchParams({
+      start_date: filters.startDate?.toISO(),
+      end_date: filters.endDate?.toISO(),
+      tipo_gasto: filters.tipoGasto,
+    });
+
+    const response = await fetch(`${API_BASE_URL}/financial/egresos/stats?${queryParams}`);
+    if (!response.ok) throw new Error('Error fetching stats');
+    return response.json();
+  },
+
+  async updateEgreso(id, egresoData) {
+    const response = await fetch(`${API_BASE_URL}/financial/egresos/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(egresoData),
+    });
+    if (!response.ok) throw new Error('Error updating egreso');
+    return response.json();
+  },
+
+  async deleteEgreso(id) {
+    const response = await fetch(`${API_BASE_URL}/financial/egresos/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Error deleting egreso');
+    return true;
+  },
+
+  async bulkUpload(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/financial/egresos/bulk-upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error('Error al cargar el archivo');
+    return response.json();
+  },
+};
+
+
+export const egresoRecurrenteService = {
+  async getAllEgresosRecurrentes() {
+    const response = await fetch(`${API_BASE_URL}/financial/egresos-recurrentes/`);
+    if (!response.ok) throw new Error('Error fetching egresos recurrentes');
+    return response.json();
+  },
+
+  async createEgresoRecurrente(egresoData) {
+    const response = await fetch(`${API_BASE_URL}/financial/egresos-recurrentes/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(egresoData),
+    });
+    if (!response.ok) throw new Error('Error creating egreso recurrente');
+    return response.json();
+  },
+
+  async updateEgresoRecurrente(id, egresoData) {
+    const response = await fetch(`${API_BASE_URL}/financial/egresos-recurrentes/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(egresoData),
+    });
+    if (!response.ok) throw new Error('Error updating egreso recurrente');
+    return response.json();
+  },
+
+  async deleteEgresoRecurrente(id) {
+    const response = await fetch(`${API_BASE_URL}/financial/egresos-recurrentes/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Error deleting egreso recurrente');
+    return true;
+  },
+
+  async procesarEgresosRecurrentes() {
+    const response = await fetch(`${API_BASE_URL}/financial/egresos-recurrentes/procesar`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error('Error al procesar egresos recurrentes');
+    return response.json();
+  },
+};
