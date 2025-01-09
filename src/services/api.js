@@ -320,3 +320,18 @@ export const egresoRecurrenteService = {
     return response.json();
   },
 };
+
+
+export const resultadosService = {
+  async getResultadosStats(filters) {
+    const queryParams = new URLSearchParams({
+      start_date: filters.startDate?.toISO(),
+      end_date: filters.endDate?.toISO(),
+      period: filters.period || 'month'
+    });
+
+    const response = await fetch(`${API_BASE_URL}/financial/resultados/stats?${queryParams}`);
+    if (!response.ok) throw new Error('Error fetching resultados stats');
+    return response.json();
+  }
+};
