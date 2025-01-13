@@ -1,8 +1,19 @@
+import { DateTime } from 'luxon';
+
 // Seleccionar la URL base del API según el entorno
 const API_BASE_URL =
   process.env.NODE_ENV === 'production'
     ? process.env.REACT_APP_API_BASE_URL_PROD
     : process.env.REACT_APP_API_BASE_URL_DEV;
+
+
+function convertLocalBogotaToUTC(dateString) {
+  if (!dateString) return dateString;
+  // Interpreta la cadena en zona de Bogotá, luego conviértela a UTC y devuélvela en ISO
+  return DateTime.fromISO(dateString, { zone: 'America/Bogota' })
+                  .toUTC()
+                  .toISO(); // Ej: "2025-02-01T05:00:00.000Z"
+}
 
 export const leadService = {
   // Get all leads
@@ -148,21 +159,36 @@ export const ingresoService = {
   },
 
   async createIngreso(ingresoData) {
+    // Clonamos para no mutar el original
+    const dataToSend = { ...ingresoData };
+
+    // Convertir fecha local a UTC
+    if (dataToSend.fecha) {
+      dataToSend.fecha = convertLocalBogotaToUTC(dataToSend.fecha);
+    }
+
     const response = await fetch(`${API_BASE_URL}/financial/ingresos/`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(ingresoData),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dataToSend),
     });
     if (!response.ok) throw new Error('Error creating ingreso');
     return response.json();
   },
 
   async getIngresoStats(filters) {
+    // Si quieres que los filtros se interpreten en Bogotá y se manden en UTC:
+    // (Opcional, depende de cómo hayas configurado el backend)
+    const startDate = filters.startDate 
+      ? convertLocalBogotaToUTC(filters.startDate.toISO())
+      : undefined;
+    const endDate = filters.endDate
+      ? convertLocalBogotaToUTC(filters.endDate.toISO())
+      : undefined;
+
     const queryParams = new URLSearchParams({
-      start_date: filters.startDate?.toISO(),
-      end_date: filters.endDate?.toISO(),
+      start_date: startDate,
+      end_date: endDate,
       plataforma: filters.plataforma,
     });
 
@@ -170,13 +196,18 @@ export const ingresoService = {
     if (!response.ok) throw new Error('Error fetching stats');
     return response.json();
   },
+
   async updateIngreso(id, ingresoData) {
+    const dataToSend = { ...ingresoData };
+    
+    if (dataToSend.fecha) {
+      dataToSend.fecha = convertLocalBogotaToUTC(dataToSend.fecha);
+    }
+
     const response = await fetch(`${API_BASE_URL}/financial/ingresos/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(ingresoData),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dataToSend),
     });
     if (!response.ok) throw new Error('Error updating ingreso');
     return response.json();
@@ -189,6 +220,7 @@ export const ingresoService = {
     if (!response.ok) throw new Error('Error deleting ingreso');
     return true;
   },
+
   async bulkUpload(file) {
     const formData = new FormData();
     formData.append('file', file);
@@ -212,21 +244,34 @@ export const egresoService = {
   },
 
   async createEgreso(egresoData) {
+    const dataToSend = { ...egresoData };
+
+    // Convertir fecha local a UTC
+    if (dataToSend.fecha) {
+      dataToSend.fecha = convertLocalBogotaToUTC(dataToSend.fecha);
+    }
+
     const response = await fetch(`${API_BASE_URL}/financial/egresos/`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(egresoData),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dataToSend),
     });
     if (!response.ok) throw new Error('Error creating egreso');
     return response.json();
   },
 
   async getEgresoStats(filters) {
+    // Si también deseas convertir startDate/endDate a UTC
+    const startDate = filters.startDate
+      ? convertLocalBogotaToUTC(filters.startDate.toISO())
+      : undefined;
+    const endDate = filters.endDate
+      ? convertLocalBogotaToUTC(filters.endDate.toISO())
+      : undefined;
+
     const queryParams = new URLSearchParams({
-      start_date: filters.startDate?.toISO(),
-      end_date: filters.endDate?.toISO(),
+      start_date: startDate,
+      end_date: endDate,
       tipo_gasto: filters.tipoGasto,
     });
 
@@ -236,12 +281,16 @@ export const egresoService = {
   },
 
   async updateEgreso(id, egresoData) {
+    const dataToSend = { ...egresoData };
+
+    if (dataToSend.fecha) {
+      dataToSend.fecha = convertLocalBogotaToUTC(dataToSend.fecha);
+    }
+
     const response = await fetch(`${API_BASE_URL}/financial/egresos/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(egresoData),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dataToSend),
     });
     if (!response.ok) throw new Error('Error updating egreso');
     return response.json();
