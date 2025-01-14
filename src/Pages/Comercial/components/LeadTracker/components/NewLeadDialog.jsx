@@ -22,21 +22,11 @@ import {
   Source as SourceIcon,
   Public as PublicIcon
 } from '@mui/icons-material';
+import { DateTime } from 'luxon';  // Usamos Luxon directamente
 
 import { leadSources, countries, interestOptionsWithPrices } from '../leadConstants';
 
-const initialLeadState = {
-  nombre: '',
-  telefono: '',
-  email: '',
-  pais: '',
-  fuente: '',
-  interes: [],
-  notas: '',
-  stage: 'LEAD',
-};
-
-// 1) Mapa de códigos de país
+// Objeto para guardar los indicativos telefónicos por país
 const countryPhoneCodes = {
   Argentina: '+54',
   Bolivia: '+591',
@@ -56,7 +46,21 @@ const countryPhoneCodes = {
   'República Dominicana': '+1',
   Uruguay: '+598',
   Venezuela: '+58'
-  // "Otro": Podrías dejarlo vacío o poner un valor genérico
+  // "Otro": podría estar vacío o ser genérico
+};
+
+const initialLeadState = {
+  nombre: '',
+  telefono: '',
+  email: '',
+  pais: '',
+  fuente: '',
+  interes: [],
+  notas: '',
+  stage: 'LEAD',
+
+  // Campo adicional para almacenar la fecha del primer contacto
+  firstContact: null  // Si es null, se usará la fecha actual en el backend
 };
 
 const NewLeadDialog = ({ open, onClose, onSave }) => {
@@ -64,7 +68,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Validación antes de guardar
+  // Validar formulario
   const validateForm = () => {
     const newErrors = {};
     if (!leadData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
@@ -76,7 +80,6 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
       newErrors.interes = 'Selecciona al menos un producto';
     }
 
-    // Validar email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (leadData.email && !emailRegex.test(leadData.email)) {
       newErrors.email = 'Email inválido';
@@ -86,22 +89,26 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Enviar formulario
+  // Manejo de envío
   const handleSubmit = async () => {
     if (validateForm()) {
       setIsSubmitting(true);
       try {
-        // 2) Tomar el prefijo según el país y concatenar
+        // Concatenar indicativo
         const prefix = countryPhoneCodes[leadData.pais] || '';
-        // Eliminamos caracteres no numéricos para que quede limpio
         const phoneClean = leadData.telefono.replace(/\D/g, '');
         const phoneWithCode = prefix + phoneClean;
 
+        // Convertir la fecha a ISO si el usuario la eligió, si no -> null
+        const firstContactDate = leadData.firstContact
+          ? leadData.firstContact.toISO()  // Ej: "2025-01-15T00:00:00.000Z"
+          : null;
+
         const formattedData = {
           ...leadData,
-          stage: 'LEAD',
-          created_at: new Date().toISOString(),
-          telefono: phoneWithCode
+          telefono: phoneWithCode,
+          first_contact_date: firstContactDate, // Se enviará al backend
+          created_at: new Date().toISOString()
         };
 
         await onSave(formattedData);
@@ -114,6 +121,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
     }
   };
 
+  // Manejo de cierre
   const handleClose = () => {
     setLeadData(initialLeadState);
     setErrors({});
@@ -121,9 +129,28 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
     onClose();
   };
 
+  // Manejo del cambio en el campo de fecha (type="date")
+  const handleDateChange = (e) => {
+    const newDateString = e.target.value; // Formato "YYYY-MM-DD"
+    // Parseamos con Luxon
+    const dt = DateTime.fromFormat(newDateString, 'yyyy-MM-dd');
+    if (dt.isValid) {
+      // Si es válida, guardamos un objeto DateTime
+      setLeadData({ ...leadData, firstContact: dt });
+    } else {
+      // Si es inválida o el usuario limpió, lo ponemos en null
+      setLeadData({ ...leadData, firstContact: null });
+    }
+  };
+
+  // Convertimos el valor DateTime a YYYY-MM-DD para el input
+  const dateValue = leadData.firstContact
+    ? leadData.firstContact.toFormat('yyyy-LL-dd')
+    : '';
+
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={handleClose}
       maxWidth="md"
       fullWidth
@@ -142,13 +169,15 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
       </DialogTitle>
 
       <DialogContent>
-        <Box sx={{ 
-          display: 'grid', 
-          gap: 2,
-          gridTemplateColumns: 'repeat(2, 1fr)', 
-          mt: 2 
-        }}>
-          {/* Nombre */}
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 2,
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            mt: 2
+          }}
+        >
+          {/* Nombre completo */}
           <TextField
             label="Nombre completo"
             value={leadData.nombre}
@@ -268,9 +297,35 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             </Select>
           </FormControl>
 
+          {/* Fecha de primer contacto (opcional) */}
+          <TextField
+            label="Fecha primer contacto (opcional)"
+            type="date"
+            value={dateValue}
+            onChange={handleDateChange}
+            disabled={isSubmitting}
+            InputProps={{
+              sx: { color: '#FFFFFF' }
+            }}
+            InputLabelProps={{
+              shrink: true, // para que no se superponga el label
+              sx: {
+                color: '#FFFFFF',
+                '&.Mui-focused': { color: '#00FFD1' }
+              }
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.23)' },
+                '&:hover fieldset': { borderColor: '#FFFFFF' },
+                '&.Mui-focused fieldset': { borderColor: '#00FFD1' },
+              }
+            }}
+          />
+
           {/* Productos de interés */}
-          <FormControl 
-            error={!!errors.interes} 
+          <FormControl
+            error={!!errors.interes}
             sx={{ gridColumn: '1 / -1' }}
             disabled={isSubmitting}
           >
@@ -283,10 +338,10 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {selected.map((value) => (
-                    <Chip 
+                    <Chip
                       key={value}
                       label={`${value} (${interestOptionsWithPrices[value]} USD)`}
-                      sx={{ 
+                      sx={{
                         backgroundColor: '#00FFD1',
                         color: '#1E1E1E'
                       }}
@@ -342,7 +397,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
       </DialogContent>
 
       <DialogActions sx={{ p: 3 }}>
-        <Button 
+        <Button
           onClick={handleClose}
           sx={{ color: '#FFFFFF' }}
           disabled={isSubmitting}
