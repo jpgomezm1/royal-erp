@@ -8,7 +8,6 @@ import {
 import Ingresos from './components/Ingresos/Ingresos';
 import Egresos from './components/Egresos/Egresos';
 import Resultados from './components/Resultados/Resultados';
-import Data from './components/Data/Data';
 
 const TabPanel = (props) => {
   const { children, value, index, ...other } = props;
@@ -88,17 +87,6 @@ const FinancieraPage = () => {
               </Typography>
             } 
           />
-          <Tab 
-            label={
-              <Typography sx={{ 
-                fontSize: '1rem',
-                fontWeight: currentTab === 3 ? 600 : 400,
-                textTransform: 'none',
-              }}>
-                Data
-              </Typography>
-            } 
-          />
         </Tabs>
       </Box>
 
@@ -110,9 +98,6 @@ const FinancieraPage = () => {
       </TabPanel>
       <TabPanel value={currentTab} index={2}>
         <Resultados />
-      </TabPanel>
-      <TabPanel value={currentTab} index={3}>
-        <Data />
       </TabPanel>
     </Box>
   );

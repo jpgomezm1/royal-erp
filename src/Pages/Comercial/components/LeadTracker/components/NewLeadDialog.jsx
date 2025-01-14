@@ -22,7 +22,8 @@ import {
   Source as SourceIcon,
   Public as PublicIcon
 } from '@mui/icons-material';
-import { leadSources, interestOptions, countries } from '../leadConstants';
+
+import { leadSources, countries, interestOptionsWithPrices } from '../leadConstants';
 
 const initialLeadState = {
   nombre: '',
@@ -35,11 +36,35 @@ const initialLeadState = {
   stage: 'LEAD',
 };
 
+// 1) Mapa de códigos de país
+const countryPhoneCodes = {
+  Argentina: '+54',
+  Bolivia: '+591',
+  Chile: '+56',
+  Colombia: '+57',
+  'Costa Rica': '+506',
+  Ecuador: '+593',
+  'El Salvador': '+503',
+  España: '+34',
+  Guatemala: '+502',
+  Honduras: '+504',
+  México: '+52',
+  Nicaragua: '+505',
+  Panamá: '+507',
+  Paraguay: '+595',
+  Perú: '+51',
+  'República Dominicana': '+1',
+  Uruguay: '+598',
+  Venezuela: '+58'
+  // "Otro": Podrías dejarlo vacío o poner un valor genérico
+};
+
 const NewLeadDialog = ({ open, onClose, onSave }) => {
   const [leadData, setLeadData] = useState(initialLeadState);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Validación antes de guardar
   const validateForm = () => {
     const newErrors = {};
     if (!leadData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
@@ -47,9 +72,11 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
     if (!leadData.email.trim()) newErrors.email = 'El email es requerido';
     if (!leadData.pais) newErrors.pais = 'El país es requerido';
     if (!leadData.fuente) newErrors.fuente = 'La fuente es requerida';
-    if (leadData.interes.length === 0) newErrors.interes = 'Selecciona al menos un producto';
+    if (leadData.interes.length === 0) {
+      newErrors.interes = 'Selecciona al menos un producto';
+    }
 
-    // Validar formato de email
+    // Validar email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (leadData.email && !emailRegex.test(leadData.email)) {
       newErrors.email = 'Email inválido';
@@ -59,14 +86,22 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Enviar formulario
   const handleSubmit = async () => {
     if (validateForm()) {
       setIsSubmitting(true);
       try {
+        // 2) Tomar el prefijo según el país y concatenar
+        const prefix = countryPhoneCodes[leadData.pais] || '';
+        // Eliminamos caracteres no numéricos para que quede limpio
+        const phoneClean = leadData.telefono.replace(/\D/g, '');
+        const phoneWithCode = prefix + phoneClean;
+
         const formattedData = {
           ...leadData,
           stage: 'LEAD',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          telefono: phoneWithCode
         };
 
         await onSave(formattedData);
@@ -105,6 +140,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
           <Typography>Nuevo Lead</Typography>
         </Box>
       </DialogTitle>
+
       <DialogContent>
         <Box sx={{ 
           display: 'grid', 
@@ -112,6 +148,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
           gridTemplateColumns: 'repeat(2, 1fr)', 
           mt: 2 
         }}>
+          {/* Nombre */}
           <TextField
             label="Nombre completo"
             value={leadData.nombre}
@@ -133,6 +170,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             }}
           />
 
+          {/* Teléfono */}
           <TextField
             label="Teléfono"
             value={leadData.telefono}
@@ -155,6 +193,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             }}
           />
 
+          {/* Email */}
           <TextField
             label="Email"
             value={leadData.email}
@@ -177,6 +216,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             }}
           />
 
+          {/* País */}
           <FormControl error={!!errors.pais} disabled={isSubmitting}>
             <InputLabel sx={{ color: '#FFFFFF' }}>País</InputLabel>
             <Select
@@ -202,6 +242,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             </Select>
           </FormControl>
 
+          {/* Fuente */}
           <FormControl error={!!errors.fuente} disabled={isSubmitting}>
             <InputLabel sx={{ color: '#FFFFFF' }}>Fuente</InputLabel>
             <Select
@@ -227,6 +268,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
             </Select>
           </FormControl>
 
+          {/* Productos de interés */}
           <FormControl 
             error={!!errors.interes} 
             sx={{ gridColumn: '1 / -1' }}
@@ -234,40 +276,49 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
           >
             <InputLabel sx={{ color: '#FFFFFF' }}>Productos de interés</InputLabel>
             <Select
-  multiple
-  value={leadData.interes}
-  onChange={(e) => setLeadData({ ...leadData, interes: e.target.value })}
-  input={<OutlinedInput label="Productos de interés" />}
-  renderValue={(selected) => (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-      {selected.map((value) => (
-        <Chip 
-          key={value} 
-          label={
-            value === 'Club Privado' ? 'Club Privado (75 USD)' :
-            value === 'Plan Anual' ? 'Plan Anual (270 USD)' :
-            'Instituto Royal (2990 USD)' 
-          }
-          sx={{ 
-            backgroundColor: '#00FFD1',
-            color: '#1E1E1E'
-          }}
-        />
-      ))}
-    </Box>
-  )}
->
-  {interestOptions.map((option) => (
-    <MenuItem key={option} value={option}>
-      {option === 'Club Privado' ? 'Club Privado (75 USD)' :
-       option === 'Plan Anual' ? 'Plan Anual (270 USD)' :
-       'Instituto Royal (2990 USD)'}
-    </MenuItem>
-  ))}
-</Select>
-
+              multiple
+              value={leadData.interes}
+              onChange={(e) => setLeadData({ ...leadData, interes: e.target.value })}
+              input={<OutlinedInput label="Productos de interés" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip 
+                      key={value}
+                      label={`${value} (${interestOptionsWithPrices[value]} USD)`}
+                      sx={{ 
+                        backgroundColor: '#00FFD1',
+                        color: '#1E1E1E'
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
+              sx={{
+                color: '#FFFFFF',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.23)'
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#FFFFFF'
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#00FFD1'
+                }
+              }}
+            >
+              {Object.keys(interestOptionsWithPrices).map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option} ({interestOptionsWithPrices[option]} USD)
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.interes && (
+              <Typography color="error" variant="caption">{errors.interes}</Typography>
+            )}
           </FormControl>
 
+          {/* Notas */}
           <TextField
             label="Notas iniciales"
             multiline
@@ -289,6 +340,7 @@ const NewLeadDialog = ({ open, onClose, onSave }) => {
           />
         </Box>
       </DialogContent>
+
       <DialogActions sx={{ p: 3 }}>
         <Button 
           onClick={handleClose}

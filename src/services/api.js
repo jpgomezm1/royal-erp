@@ -1,3 +1,5 @@
+// api.js
+
 import { DateTime } from 'luxon';
 
 // Seleccionar la URL base del API según el entorno

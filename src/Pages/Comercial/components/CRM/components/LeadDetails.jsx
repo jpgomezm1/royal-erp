@@ -278,7 +278,7 @@ const LeadDetails = ({ lead, onClose }) => {
           </Grid>
         </Paper>
 
-        {/* Detalles del Deal (pero SIN pagos) */}
+        {/* Detalles del Deal */}
         {lead.deal && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="h6" sx={{ color: '#FFFFFF', mb: 2 }}>
@@ -312,27 +312,73 @@ const LeadDetails = ({ lead, onClose }) => {
                 </Grid>
               </Grid>
             </Paper>
+
+            {/* Productos Contratados (LOS 5 PRODUCTOS NUEVOS) */}
             <Typography variant="subtitle1" sx={{ color: '#FFFFFF', mb: 1 }}>
               Productos Contratados
             </Typography>
             <Paper sx={{ p: 2, backgroundColor: '#262626' }}>
+              {/* Indicador RTC Pro (Anual) */}
               <Box sx={{ mb: 2 }}>
                 <Typography sx={{ color: '#FFFFFF' }}>
-                  Club Privado: {lead.deal.club_privado ? 'Sí' : 'No'}
+                  Indicador RTC Pro (Anual):{' '}
+                  {lead.deal.indicador_rtc_pro_anual ? 'Sí' : 'No'}
                 </Typography>
-                {lead.deal.fecha_inicio_club && (
+                {lead.deal.indicador_rtc_pro_anual && lead.deal.fecha_inicio_indicador_rtc_pro_anual && (
                   <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
-                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_club).toFormat('dd/MM/yyyy')}
+                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_indicador_rtc_pro_anual).toFormat('dd/MM/yyyy')}
                   </Typography>
                 )}
               </Box>
+
+              {/* Indicador RTC Pro (Lifetime) */}
               <Box sx={{ mb: 2 }}>
                 <Typography sx={{ color: '#FFFFFF' }}>
-                  Plan Anual: {lead.deal.plan_anual ? 'Sí' : 'No'}
+                  Indicador RTC Pro (Lifetime):{' '}
+                  {lead.deal.indicador_rtc_pro_lifetime ? 'Sí' : 'No'}
                 </Typography>
-                {lead.deal.fecha_inicio_plan && (
+                {lead.deal.indicador_rtc_pro_lifetime && lead.deal.fecha_inicio_indicador_rtc_pro_lifetime && (
                   <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
-                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_plan).toFormat('dd/MM/yyyy')}
+                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_indicador_rtc_pro_lifetime).toFormat('dd/MM/yyyy')}
+                  </Typography>
+                )}
+              </Box>
+
+              {/* Club Privado (Trimestral) */}
+              <Box sx={{ mb: 2 }}>
+                <Typography sx={{ color: '#FFFFFF' }}>
+                  Club Privado (Trimestral):{' '}
+                  {lead.deal.club_privado_trimestral ? 'Sí' : 'No'}
+                </Typography>
+                {lead.deal.club_privado_trimestral && lead.deal.fecha_inicio_club_privado_trimestral && (
+                  <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
+                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_club_privado_trimestral).toFormat('dd/MM/yyyy')}
+                  </Typography>
+                )}
+              </Box>
+
+              {/* Club Privado (Anual) */}
+              <Box sx={{ mb: 2 }}>
+                <Typography sx={{ color: '#FFFFFF' }}>
+                  Club Privado (Anual):{' '}
+                  {lead.deal.club_privado_anual ? 'Sí' : 'No'}
+                </Typography>
+                {lead.deal.club_privado_anual && lead.deal.fecha_inicio_club_privado_anual && (
+                  <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
+                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_club_privado_anual).toFormat('dd/MM/yyyy')}
+                  </Typography>
+                )}
+              </Box>
+
+              {/* Instituto Royal */}
+              <Box sx={{ mb: 2 }}>
+                <Typography sx={{ color: '#FFFFFF' }}>
+                  Instituto Royal:{' '}
+                  {lead.deal.instituto_royal ? 'Sí' : 'No'}
+                </Typography>
+                {lead.deal.instituto_royal && lead.deal.fecha_inicio_instituto_royal && (
+                  <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
+                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_instituto_royal).toFormat('dd/MM/yyyy')}
                   </Typography>
                 )}
               </Box>

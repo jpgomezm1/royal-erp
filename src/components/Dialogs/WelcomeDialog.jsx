@@ -2,7 +2,7 @@ import React from 'react';
 import { Dialog, DialogContent, Box, Avatar, Typography, Button } from '@mui/material';
 import { AccountCircle as AccountCircleIcon } from '@mui/icons-material';
 
-const WelcomeDialog = ({ open, onClose }) => (
+const WelcomeDialog = ({ open, onClose, userName }) => (
   <Dialog
     open={open}
     onClose={onClose}
@@ -40,10 +40,7 @@ const WelcomeDialog = ({ open, onClose }) => (
           ¡Bienvenido de vuelta!
         </Typography>
         <Typography variant="h6" sx={{ color: '#FFFFFF', mb: 0.5 }}>
-          Carlos Giraldo
-        </Typography>
-        <Typography variant="subtitle1" sx={{ color: '#AAAAAA', mb: 3 }}>
-          Chief Financial Officer
+          {userName || 'Usuario'}
         </Typography>
         <Button
           variant="contained"

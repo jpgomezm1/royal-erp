@@ -38,9 +38,6 @@ const GoodbyeDialog = ({ open, onClose }) => (
         <Typography variant="h5" sx={{ color: '#00FFD1', mb: 1, fontWeight: 600 }}>
           ¡Hasta pronto!
         </Typography>
-        <Typography variant="h6" sx={{ color: '#FFFFFF', mb: 0.5 }}>
-          Carlos Giraldo
-        </Typography>
         <Typography variant="body1" sx={{ color: '#AAAAAA', mb: 3 }}>
           Gracias por usar nuestro sistema
         </Typography>

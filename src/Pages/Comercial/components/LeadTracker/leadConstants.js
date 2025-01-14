@@ -1,3 +1,5 @@
+// leadConstants.js
+
 export const pipelineStages = {
     LEAD: { 
       label: 'Lead Ingresado', 
@@ -46,9 +48,11 @@ export const pipelineStages = {
   ];
   
   export const interestOptions = [
-    'Club Privado',
-    'Plan Anual',
-    'Instituto Royal' // Nuevo producto
+    'Indicador RTC Pro (Licencia Anual)',
+    'Indicador RTC Pro (Licencia Lifetime)',
+    'Club Privado (Plan Trimestral)',
+    'Club Privado (Plan Anual)',
+    'Instituto Royal'
   ];
   
   export const logTypes = {
@@ -82,7 +86,17 @@ export const pipelineStages = {
   ];
   
   export const productPrices = {
-    'Club Privado': 75,
-    'Plan Anual': 270,
-    'Instituto Royal': 2990 // Precio del nuevo producto
+    'Indicador RTC Pro (Licencia Anual)': 290,
+    'Indicador RTC Pro (Licencia Lifetime)': 990,
+    'Club Privado (Plan Trimestral)': 75,
+    'Club Privado (Plan Anual)': 270,
+    'Instituto Royal': 3990
   };
+
+  export const interestOptionsWithPrices = {
+  'Indicador RTC Pro (Licencia Anual)': 290,
+  'Indicador RTC Pro (Licencia Lifetime)': 990,
+  'Club Privado (Plan Trimestral)': 75,
+  'Club Privado (Plan Anual)': 270,
+  'Instituto Royal': 3990
+};
