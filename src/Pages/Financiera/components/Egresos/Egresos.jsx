@@ -125,14 +125,13 @@ const Egresos = () => {
     setActiveTab(newValue);
   };
 
+  // Egresos filtrados según los filtros
   const filteredEgresos = egresos.filter(egreso => {
     const egresoDate = DateTime.fromISO(egreso.fecha);
-    
     const matchesDate = (!filters.startDate || egresoDate >= filters.startDate) &&
                        (!filters.endDate || egresoDate <= filters.endDate);
     const matchesTipo = filters.tipoGasto === 'all' || egreso.tipo_gasto === filters.tipoGasto;
     const matchesSearch = egreso.concepto.toLowerCase().includes(filters.searchTerm.toLowerCase());
-    
     return matchesDate && matchesTipo && matchesSearch;
   });
 

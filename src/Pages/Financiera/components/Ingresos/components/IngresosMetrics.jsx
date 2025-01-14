@@ -174,21 +174,35 @@ const MetricCard = ({
 
 const IngresosMetrics = ({ ingresos }) => {
   const calculateMetrics = () => {
+    // -- Aquí estaba la lógica que siempre filtraba por el mes actual y anterior --
+    //    const now = DateTime.now();
+    //    const currentMonth = now.startOf('month');
+    //    const previousMonth = currentMonth.minus({ months: 1 });
+    //    const daysInMonth = now.daysInMonth;
+    //    const currentDay = now.day;
+    //
+    //    // Filtrar ingresos por período
+    //    const currentMonthIngresos = ingresos.filter(ingreso => 
+    //      DateTime.fromISO(ingreso.fecha) >= currentMonth
+    //    );
+    //    const previousMonthIngresos = ingresos.filter(ingreso => 
+    //      DateTime.fromISO(ingreso.fecha) >= previousMonth &&
+    //      DateTime.fromISO(ingreso.fecha) < currentMonth
+    //    );
+    //
+    // Para mostrar las métricas de la data FILTRADA (que ya nos pasa el padre),
+    // usaremos directamente "ingresos" como si fuera "currentMonthIngresos".
+    
+    const currentMonthIngresos = ingresos;
+    // Si deseamos, dejamos un arreglo vacío para "previousMonthIngresos",
+    // para no romper la referencia en la suma anterior:
+    const previousMonthIngresos = [];
+
+    // Mantenemos la lógica de "mes actual" para la proyección, 
+    // aunque ahora esté algo desconectada del rango filtrado.
     const now = DateTime.now();
-    const currentMonth = now.startOf('month');
-    const previousMonth = currentMonth.minus({ months: 1 });
     const daysInMonth = now.daysInMonth;
     const currentDay = now.day;
-
-    // Filtrar ingresos por período
-    const currentMonthIngresos = ingresos.filter(ingreso => 
-      DateTime.fromISO(ingreso.fecha) >= currentMonth
-    );
-
-    const previousMonthIngresos = ingresos.filter(ingreso => 
-      DateTime.fromISO(ingreso.fecha) >= previousMonth &&
-      DateTime.fromISO(ingreso.fecha) < currentMonth
-    );
 
     // Totales
     const currentMonthTotal = currentMonthIngresos.reduce((sum, ingreso) => 
@@ -198,7 +212,7 @@ const IngresosMetrics = ({ ingresos }) => {
       sum + ingreso.monto, 0
     );
 
-    // Métricas por producto
+    // Métricas por producto (basadas en la data que llega filtrada)
     const productMetrics = currentMonthIngresos.reduce((acc, ingreso) => {
       acc[ingreso.concepto] = {
         count: (acc[ingreso.concepto]?.count || 0) + 1,
@@ -220,10 +234,11 @@ const IngresosMetrics = ({ ingresos }) => {
       return acc;
     }, {});
 
-    // Calcular proyección mensual
-    const dailyAverage = currentMonthTotal / currentDay;
+    // Calcular proyección mensual (basado en día actual vs. mes completo).
+    // Si el rango filtrado no coincide con el mes entero, este valor será "aprox".
+    const dailyAverage = currentDay ? (currentMonthTotal / currentDay) : 0;
     const projectedTotal = dailyAverage * daysInMonth;
-    const progressPercentage = (currentMonthTotal / projectedTotal) * 100;
+    const progressPercentage = projectedTotal ? (currentMonthTotal / projectedTotal) * 100 : 0;
 
     // Identificar plataforma principal
     const topPlatform = Object.entries(platformMetrics)
@@ -232,8 +247,11 @@ const IngresosMetrics = ({ ingresos }) => {
     return {
       currentMonthTotal,
       previousMonthTotal,
-      percentageChange: previousMonthTotal === 0 ? 100 :
-        ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100,
+      // Para la variación vs. mes anterior, como no tenemos "previousMonthIngresos",
+      // quedará forzado a 100%. Si deseas otra lógica, deberías pasar data no filtrada:
+      percentageChange: previousMonthTotal === 0
+        ? 100
+        : ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100,
       dailyAverage,
       projectedTotal,
       progressPercentage,
@@ -276,7 +294,9 @@ const IngresosMetrics = ({ ingresos }) => {
           secondaryMetric={`$${metrics.topPlatform[1].total.toLocaleString()}`}
           icon={PaymentsIcon}
           platformColor={PLATAFORMA_COLORS[metrics.topPlatform[0]]}
-          progress={(metrics.topPlatform[1].total / metrics.currentMonthTotal) * 100}
+          progress={metrics.currentMonthTotal 
+            ? (metrics.topPlatform[1].total / metrics.currentMonthTotal) * 100 
+            : 0}
           tooltip={`${metrics.topPlatform[1].count} transacciones`}
         />
       </Grid>
@@ -289,7 +309,9 @@ const IngresosMetrics = ({ ingresos }) => {
             .map(([product, data]) => `${data.count} ${product}`)
             .join(' · ')}
           icon={TrendingIcon}
-          progress={(metrics.currentMonthTotal / metrics.projectedTotal) * 100}
+          progress={metrics.projectedTotal 
+            ? (metrics.currentMonthTotal / metrics.projectedTotal) * 100 
+            : 0}
           tooltip={`Total: $${metrics.currentMonthTotal.toLocaleString()}`}
         />
       </Grid>

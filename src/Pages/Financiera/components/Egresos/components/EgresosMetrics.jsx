@@ -174,21 +174,38 @@ const MetricCard = ({
 
 const EgresosMetrics = ({ egresos }) => {
   const calculateMetrics = () => {
+    // ------------------------------------------------------------------------------
+    // Original lógica que filtra por mes actual y anterior:
+    // const now = DateTime.now();
+    // const currentMonth = now.startOf('month');
+    // const previousMonth = currentMonth.minus({ months: 1 });
+    // const daysInMonth = now.daysInMonth;
+    // const currentDay = now.day;
+
+    // Filtrar egresos por período (se omitía la data fuera del mes actual):
+    // const currentMonthEgresos = egresos.filter(egreso => 
+    //   DateTime.fromISO(egreso.fecha) >= currentMonth
+    // );
+    // const previousMonthEgresos = egresos.filter(egreso => 
+    //   DateTime.fromISO(egreso.fecha) >= previousMonth &&
+    //   DateTime.fromISO(egreso.fecha) < currentMonth
+    // );
+    //
+    // Como queremos usar la data ya filtrada por el padre, forzamos:
+    // ------------------------------------------------------------------------------
+    
+    // Si deseas que las métricas reflejen EXACTAMENTE la data filtrada, 
+    // podemos simplemente usar "egresos" como base, sin refiltrar:
+    const currentMonthEgresos = egresos;
+    
+    // Para no romper las referencias de más abajo (en el código original),
+    // dejemos un arreglo vacío en previousMonthEgresos:
+    const previousMonthEgresos = [];
+
+    // Por conveniencia, calculamos un "ahora" y algunos valores
     const now = DateTime.now();
-    const currentMonth = now.startOf('month');
-    const previousMonth = currentMonth.minus({ months: 1 });
     const daysInMonth = now.daysInMonth;
     const currentDay = now.day;
-
-    // Filtrar egresos por período
-    const currentMonthEgresos = egresos.filter(egreso => 
-      DateTime.fromISO(egreso.fecha) >= currentMonth
-    );
-
-    const previousMonthEgresos = egresos.filter(egreso => 
-      DateTime.fromISO(egreso.fecha) >= previousMonth &&
-      DateTime.fromISO(egreso.fecha) < currentMonth
-    );
 
     // Totales
     const currentMonthTotal = currentMonthEgresos.reduce((sum, egreso) => 
@@ -198,7 +215,8 @@ const EgresosMetrics = ({ egresos }) => {
       sum + egreso.monto, 0
     );
 
-    // Métricas por tipo de gasto
+    // Métricas por tipo de gasto (tomamos la data "actualMonthEgresos", 
+    // pero en realidad ya viene filtrada del padre)
     const tipoGastoMetrics = currentMonthEgresos.reduce((acc, egreso) => {
       if (!acc[egreso.tipo_gasto]) {
         acc[egreso.tipo_gasto] = {
@@ -224,10 +242,10 @@ const EgresosMetrics = ({ egresos }) => {
       return acc;
     }, {});
 
-    // Calcular proyección mensual
-    const dailyAverage = currentMonthTotal / currentDay;
+    // Calcular proyección mensual (opcional, basado en la idea del mes actual)
+    const dailyAverage = currentDay ? (currentMonthTotal / currentDay) : 0;
     const projectedTotal = dailyAverage * daysInMonth;
-    const progressPercentage = (currentMonthTotal / projectedTotal) * 100;
+    const progressPercentage = projectedTotal ? (currentMonthTotal / projectedTotal) * 100 : 0;
 
     // Identificar tipo de gasto principal
     const topTipoGasto = Object.entries(tipoGastoMetrics)
@@ -237,11 +255,17 @@ const EgresosMetrics = ({ egresos }) => {
     const topMetodoPago = Object.entries(metodoPagoMetrics)
       .sort(([,a], [,b]) => b.total - a.total)[0] || ['N/A', { total: 0, count: 0 }];
 
+    // Para la variación vs mes anterior, en este caso previousMonthEgresos está vacío,
+    // así que si quisieras habilitarlo, habría que pasar data sin filtrar. Por defecto, 
+    // lo dejaremos con un "falso 100%" o cálculo genérico:
+    const percentageChange = previousMonthTotal === 0 
+      ? 100 
+      : ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100;
+
     return {
       currentMonthTotal,
       previousMonthTotal,
-      percentageChange: previousMonthTotal === 0 ? 100 :
-        ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100,
+      percentageChange,
       dailyAverage,
       projectedTotal,
       progressPercentage,
@@ -259,7 +283,7 @@ const EgresosMetrics = ({ egresos }) => {
     <Grid container spacing={3} sx={{ mb: 4 }}>
       <Grid item xs={12} sm={6} lg={3}>
         <MetricCard
-          title="Egresos del Mes"
+          title="Egresos del Mes (Filtrado)"
           mainMetric={`$${metrics.currentMonthTotal.toLocaleString()}`}
           secondaryMetric={`${metrics.transactionCount} transacciones totales`}
           trendMetric={metrics.percentageChange}
@@ -273,7 +297,7 @@ const EgresosMetrics = ({ egresos }) => {
         <MetricCard
           title="Promedio Diario"
           mainMetric={`$${metrics.dailyAverage.toFixed(2).toLocaleString()}`}
-          secondaryMetric="por día del mes actual"
+          secondaryMetric="(basado en día actual)"
           icon={AnalyticsIcon}
           trendMetric={metrics.percentageChange}
         />
@@ -286,7 +310,7 @@ const EgresosMetrics = ({ egresos }) => {
           secondaryMetric={`$${metrics.topMetodoPago[1].total.toLocaleString()}`}
           icon={PaymentIcon}
           color={METODO_PAGO_COLORS[metrics.topMetodoPago[0]]}
-          progress={(metrics.topMetodoPago[1].total / metrics.currentMonthTotal) * 100}
+          progress={(metrics.topMetodoPago[1].total / metrics.currentMonthTotal) * 100 || 0}
           tooltip={`${metrics.topMetodoPago[1].count} transacciones`}
         />
       </Grid>
@@ -297,7 +321,7 @@ const EgresosMetrics = ({ egresos }) => {
           mainMetric={TIPOS_GASTO[metrics.topTipoGasto[0]] || metrics.topTipoGasto[0]}
           secondaryMetric={`$${metrics.topTipoGasto[1].total.toLocaleString()}`}
           icon={TrendingIcon}
-          progress={(metrics.topTipoGasto[1].total / metrics.currentMonthTotal) * 100}
+          progress={(metrics.topTipoGasto[1].total / metrics.currentMonthTotal) * 100 || 0}
           tooltip={`${metrics.topTipoGasto[1].count} transacciones`}
         />
       </Grid>

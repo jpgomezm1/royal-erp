@@ -115,6 +115,7 @@ const handleDeleteIngreso = async (id) => {
    showNotification(result.message || 'Registros cargados exitosamente');
  };
 
+ // Aquí filtramos los ingresos según el rango de fecha, plataforma y búsqueda
  const filteredIngresos = ingresos.filter(ingreso => {
    const ingresoDate = DateTime.fromISO(ingreso.fecha);
    
@@ -226,6 +227,7 @@ const handleDeleteIngreso = async (id) => {
 
      {/* Metrics Summary */}
      <Box sx={{ mb: 4, width: '100%' }}>
+       {/* En lugar de recalcular la data en IngresosMetrics, le pasamos "filteredIngresos" */}
        <IngresosMetrics 
          ingresos={filteredIngresos}
          loading={loading} 

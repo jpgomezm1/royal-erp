@@ -38,7 +38,7 @@ const initialPaymentState = {
 
 const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
   const [dealData, setDealData] = useState({
-    // --- NUEVOS CAMPOS PARA LOS 5 PRODUCTOS ---
+    // --- Campos para los 5 productos ---
     indicador_rtc_pro_anual: false,
     indicador_rtc_pro_lifetime: false,
     club_privado_trimestral: false,
@@ -51,17 +51,19 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
     fecha_inicio_club_privado_anual: null,
     fecha_inicio_instituto_royal: null,
 
-    // Método de pago y montos
+    // Método de pago y lista de pagos
     metodo_pago: '',
-    monto_total: 0,
     pagos: [],
+
+    // NUEVO: Campo para precio personalizado (string)
+    monto_personalizado: '',
   });
 
   const [newPayment, setNewPayment] = useState(initialPaymentState);
   const [errors, setErrors] = useState({});
 
-  // Calcula la suma total según los productos seleccionados
-  const calculateTotalAmount = () => {
+  // Calcula el precio base sumando los productos seleccionados
+  const calculateBasePrice = () => {
     let total = 0;
     if (dealData.indicador_rtc_pro_anual) total += 290;
     if (dealData.indicador_rtc_pro_lifetime) total += 990;
@@ -71,7 +73,19 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
     return total;
   };
 
-  // Formatear fecha para mostrar en lista de pagos
+  // Devuelve el monto final que se usará en el deal (base o personalizado)
+  const getFinalDealAmount = () => {
+    const basePrice = calculateBasePrice();
+    if (dealData.monto_personalizado.trim()) {
+      const custom = parseFloat(dealData.monto_personalizado);
+      if (!isNaN(custom) && custom > 0) {
+        return custom;
+      }
+    }
+    return basePrice;
+  };
+
+  // Formatear fecha para mostrar en la lista de pagos
   const formatDate = (dateTime) => {
     return dateTime.setLocale('es').toLocaleString(DateTime.DATE_FULL);
   };
@@ -87,7 +101,7 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
     setNewPayment(initialPaymentState);
   };
 
-  // Eliminar un pago programado de la lista
+  // Eliminar un pago programado
   const handleRemovePayment = (index) => {
     setDealData({
       ...dealData,
@@ -95,11 +109,11 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
     });
   };
 
-  // Validaciones antes de cerrar el Lead
+  // Validaciones previas a enviar
   const validateForm = () => {
     const newErrors = {};
 
-    // Al menos 1 producto
+    // Al menos un producto seleccionado
     const anyProductSelected =
       dealData.indicador_rtc_pro_anual ||
       dealData.indicador_rtc_pro_lifetime ||
@@ -111,7 +125,7 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
       newErrors.products = 'Selecciona al menos un producto';
     }
 
-    // Validar fecha de inicio para cada producto seleccionado
+    // Fechas de inicio según producto
     if (dealData.indicador_rtc_pro_anual && !dealData.fecha_inicio_indicador_rtc_pro_anual) {
       newErrors.fecha_inicio_indicador_rtc_pro_anual = 'Selecciona la fecha de inicio (Anual)';
     }
@@ -125,36 +139,40 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
       newErrors.fecha_inicio_club_privado_anual = 'Selecciona la fecha de inicio (Anual)';
     }
     if (dealData.instituto_royal && !dealData.fecha_inicio_instituto_royal) {
-      newErrors.fecha_inicio_instituto_royal = 'Selecciona la fecha de inicio para Instituto Royal';
+      newErrors.fecha_inicio_instituto_royal = 'Selecciona la fecha de inicio (Instituto Royal)';
     }
 
-    // Método de pago
+    // Método de pago obligatorio
     if (!dealData.metodo_pago) {
       newErrors.metodo_pago = 'Selecciona un método de pago';
     }
 
-    // Pagos
+    // Al menos un pago
     if (dealData.pagos.length === 0) {
       newErrors.pagos = 'Agrega al menos un pago programado';
     }
 
-    // Verificar que la suma de los pagos sea igual al total esperado
+    // Verificar que la suma de los pagos sea igual al monto final (base o custom)
     const totalPayments = dealData.pagos.reduce((sum, p) => sum + Number(p.monto), 0);
-    const expectedTotal = calculateTotalAmount();
-    if (totalPayments !== expectedTotal) {
-      newErrors.pagos = `El total de pagos (${totalPayments}) debe ser igual a $${expectedTotal}`;
+    const finalAmount = getFinalDealAmount();
+
+    if (Math.abs(totalPayments - finalAmount) > 0.0001) {
+      newErrors.pagos = `El total de pagos ($${totalPayments}) debe ser igual a $${finalAmount}`;
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Acción final al dar clic en "Cerrar Lead"
+  // Al dar clic en "Cerrar Lead"
   const handleSubmit = async () => {
     if (validateForm()) {
+      const finalAmount = getFinalDealAmount();
+
+      // Armamos el payload para crear el deal
       const formattedData = {
         ...dealData,
-        // Convertir fechas a ISO
+        // Convertir las fechas a ISO
         fecha_inicio_indicador_rtc_pro_anual:
           dealData.fecha_inicio_indicador_rtc_pro_anual?.toISO() || null,
         fecha_inicio_indicador_rtc_pro_lifetime:
@@ -166,7 +184,10 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
         fecha_inicio_instituto_royal:
           dealData.fecha_inicio_instituto_royal?.toISO() || null,
 
-        monto_total: calculateTotalAmount(),
+        // Este será el monto final, sea base o custom.
+        monto_total: finalAmount,
+
+        // Pagos con fechas en ISO
         pagos: dealData.pagos.map((p) => ({
           ...p,
           fecha_pago: p.fecha_pago.toISO(),
@@ -241,10 +262,7 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                       label="Fecha de inicio"
                       value={dealData.fecha_inicio_indicador_rtc_pro_anual}
                       onChange={(date) =>
-                        setDealData({
-                          ...dealData,
-                          fecha_inicio_indicador_rtc_pro_anual: date,
-                        })
+                        setDealData({ ...dealData, fecha_inicio_indicador_rtc_pro_anual: date })
                       }
                       slotProps={{
                         textField: {
@@ -297,10 +315,7 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                       label="Fecha de inicio"
                       value={dealData.fecha_inicio_indicador_rtc_pro_lifetime}
                       onChange={(date) =>
-                        setDealData({
-                          ...dealData,
-                          fecha_inicio_indicador_rtc_pro_lifetime: date,
-                        })
+                        setDealData({ ...dealData, fecha_inicio_indicador_rtc_pro_lifetime: date })
                       }
                       slotProps={{
                         textField: {
@@ -353,10 +368,7 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                       label="Fecha de inicio"
                       value={dealData.fecha_inicio_club_privado_trimestral}
                       onChange={(date) =>
-                        setDealData({
-                          ...dealData,
-                          fecha_inicio_club_privado_trimestral: date,
-                        })
+                        setDealData({ ...dealData, fecha_inicio_club_privado_trimestral: date })
                       }
                       slotProps={{
                         textField: {
@@ -409,10 +421,7 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                       label="Fecha de inicio"
                       value={dealData.fecha_inicio_club_privado_anual}
                       onChange={(date) =>
-                        setDealData({
-                          ...dealData,
-                          fecha_inicio_club_privado_anual: date,
-                        })
+                        setDealData({ ...dealData, fecha_inicio_club_privado_anual: date })
                       }
                       slotProps={{
                         textField: {
@@ -465,10 +474,7 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                       label="Fecha de inicio"
                       value={dealData.fecha_inicio_instituto_royal}
                       onChange={(date) =>
-                        setDealData({
-                          ...dealData,
-                          fecha_inicio_instituto_royal: date,
-                        })
+                        setDealData({ ...dealData, fecha_inicio_instituto_royal: date })
                       }
                       slotProps={{
                         textField: {
@@ -522,10 +528,36 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
               )}
             </FormControl>
 
+            {/* NUEVO CAMPO: Monto personalizado */}
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                Precio base calculado: ${calculateBasePrice()}
+              </Typography>
+              <TextField
+                label="Precio personalizado (opcional)"
+                type="number"
+                value={dealData.monto_personalizado}
+                onChange={(e) => setDealData({ ...dealData, monto_personalizado: e.target.value })}
+                inputProps={{ min: 0 }}
+                sx={{
+                  '& label': { color: '#FFFFFF' },
+                  '& label.Mui-focused': { color: '#00FFD1' },
+                  '& .MuiOutlinedInput-root': {
+                    color: '#FFFFFF',
+                    '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.23)' },
+                    '&:hover fieldset': { borderColor: '#FFFFFF' },
+                    '&.Mui-focused fieldset': { borderColor: '#00FFD1' },
+                  },
+                  mb: 2,
+                }}
+                helperText="Si lo dejas en blanco, se usará el precio base. Si ingresas un valor, sobrescribirá el precio total."
+              />
+            </Box>
+
             {/* Pagos programados */}
             <Box>
               <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                Pagos programados (Total: ${calculateTotalAmount()})
+                Pagos programados (Total: ${getFinalDealAmount()})
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                 <DatePicker

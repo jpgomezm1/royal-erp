@@ -37,6 +37,7 @@ import {
   Delete as DeleteIcon
 } from '@mui/icons-material';
 import { DateTime } from 'luxon';
+import QuickMonthFilter from './QuickMonthFilter';
 import { TIPOS_GASTO, METODO_PAGO_COLORS, TIPO_GASTO_COLORS } from '../../../../../constants/gastos';
 
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
@@ -205,6 +206,20 @@ const EgresosTable = ({ egresos, filters, onFilterChange, onEdit, onDelete }) =>
                 );
               })}
             </ButtonGroup>
+          </Box>
+
+          {/* Quick Month Filter */}
+          <Box sx={{ mb: 2 }}>
+            <QuickMonthFilter 
+              onSelectMonth={({ startDate, endDate }) => {
+                onFilterChange({
+                  ...filters,
+                  startDate,
+                  endDate
+                });
+                setSelectedPreset('custom');
+              }}
+            />
           </Box>
 
           {/* Custom Filters */}
@@ -382,125 +397,125 @@ const EgresosTable = ({ egresos, filters, onFilterChange, onEdit, onDelete }) =>
                       color: '#FFFFFF',
                       borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
                     }}
-                  >
-                    {egreso.concepto}
-                  </TableCell>
-                  <TableCell 
-                    sx={{ 
-                      color: '#FF6347',
-                      fontWeight: 500,
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}
-                  >
-                    ${egreso.monto.toLocaleString()}
-                  </TableCell>
-                  <TableCell 
-                    sx={{ 
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}
-                  >
-                   <Chip
-                      label={TIPOS_GASTO[egreso.tipo_gasto]}
-                      sx={{
-                        backgroundColor: `${TIPO_GASTO_COLORS[egreso.tipo_gasto]}20`,
-                        color: TIPO_GASTO_COLORS[egreso.tipo_gasto],
+                    >
+                      {egreso.concepto}
+                    </TableCell>
+                    <TableCell 
+                      sx={{ 
+                        color: '#FF6347',
                         fontWeight: 500,
-                        '&:hover': {
-                          backgroundColor: `${TIPO_GASTO_COLORS[egreso.tipo_gasto]}30`,
-                        }
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
                       }}
-                    />
-                  </TableCell>
-                  <TableCell 
-                    sx={{ 
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}
-                  >
-                    <Chip
-                      label={egreso.metodo_pago}
-                      sx={{
-                        backgroundColor: `${METODO_PAGO_COLORS[egreso.metodo_pago]}20`,
-                        color: METODO_PAGO_COLORS[egreso.metodo_pago],
-                        fontWeight: 500,
-                        '&:hover': {
-                          backgroundColor: `${METODO_PAGO_COLORS[egreso.metodo_pago]}30`,
-                        }
+                    >
+                      ${egreso.monto.toLocaleString()}
+                    </TableCell>
+                    <TableCell 
+                      sx={{ 
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
                       }}
-                    />
-                  </TableCell>
-                  <TableCell 
-                    sx={{ 
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="Editar">
-                        <IconButton
-                          onClick={() => onEdit(egreso)}
-                          sx={{ 
-                            color: '#FF6347',
-                            '&:hover': { backgroundColor: 'rgba(255, 99, 71, 0.1)' }
-                          }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar">
-                        <IconButton
-                          onClick={() => onDelete(egreso.id)}
-                          sx={{ 
-                            color: '#f44336',
-                            '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' }
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Pagination */}
-      <TablePagination
-        rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
-        component="div"
-        count={egresos.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={(event, newPage) => setPage(newPage)}
-        onRowsPerPageChange={(event) => {
-          setRowsPerPage(parseInt(event.target.value, 10));
-          setPage(0);
-        }}
-        sx={{
-          color: '#FFFFFF',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          '.MuiTablePagination-select': {
+                    >
+                     <Chip
+                        label={TIPOS_GASTO[egreso.tipo_gasto]}
+                        sx={{
+                          backgroundColor: `${TIPO_GASTO_COLORS[egreso.tipo_gasto]}20`,
+                          color: TIPO_GASTO_COLORS[egreso.tipo_gasto],
+                          fontWeight: 500,
+                          '&:hover': {
+                            backgroundColor: `${TIPO_GASTO_COLORS[egreso.tipo_gasto]}30`,
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell 
+                      sx={{ 
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                      }}
+                    >
+                      <Chip
+                        label={egreso.metodo_pago}
+                        sx={{
+                          backgroundColor: `${METODO_PAGO_COLORS[egreso.metodo_pago]}20`,
+                          color: METODO_PAGO_COLORS[egreso.metodo_pago],
+                          fontWeight: 500,
+                          '&:hover': {
+                            backgroundColor: `${METODO_PAGO_COLORS[egreso.metodo_pago]}30`,
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell 
+                      sx={{ 
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Tooltip title="Editar">
+                          <IconButton
+                            onClick={() => onEdit(egreso)}
+                            sx={{ 
+                              color: '#FF6347',
+                              '&:hover': { backgroundColor: 'rgba(255, 99, 71, 0.1)' }
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar">
+                          <IconButton
+                            onClick={() => onDelete(egreso.id)}
+                            sx={{ 
+                              color: '#f44336',
+                              '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' }
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+  
+        {/* Pagination */}
+        <TablePagination
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+          component="div"
+          count={egresos.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(event, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(event) => {
+            setRowsPerPage(parseInt(event.target.value, 10));
+            setPage(0);
+          }}
+          sx={{
             color: '#FFFFFF',
-          },
-          '.MuiTablePagination-selectIcon': {
-            color: '#FFFFFF',
-          },
-          '.MuiTablePagination-displayedRows': {
-            color: '#FFFFFF',
-          },
-          '.MuiTablePagination-actions': {
-            color: '#FFFFFF',
-            '& button': {
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            '.MuiTablePagination-select': {
               color: '#FFFFFF',
-              '&.Mui-disabled': {
-                color: 'rgba(255, 255, 255, 0.3)',
+            },
+            '.MuiTablePagination-selectIcon': {
+              color: '#FFFFFF',
+            },
+            '.MuiTablePagination-displayedRows': {
+              color: '#FFFFFF',
+            },
+            '.MuiTablePagination-actions': {
+              color: '#FFFFFF',
+              '& button': {
+                color: '#FFFFFF',
+                '&.Mui-disabled': {
+                  color: 'rgba(255, 255, 255, 0.3)',
+                }
               }
             }
-          }
-        }}
-      />
-    </Paper>
-  );
-};
-
-export default EgresosTable;
+          }}
+        />
+      </Paper>
+    );
+  };
+  
+  export default EgresosTable;
