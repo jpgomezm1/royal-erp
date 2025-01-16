@@ -48,11 +48,12 @@ export const pipelineStages = {
   ];
   
   export const interestOptions = [
-    'Indicador RTC Pro (Licencia Anual)',
-    'Indicador RTC Pro (Licencia Lifetime)',
-    'Club Privado (Plan Trimestral)',
-    'Club Privado (Plan Anual)',
-    'Instituto Royal'
+    'Indicador RTC (Licencia Anual)',
+    'Indicador RTC (Licencia Lifetime)',
+    'Sala de Analisis (Plan Trimestral)',
+    'Sala de Analisis (Plan Anual)',
+    'Mentorias',
+    'Masterclass' 
   ];
   
   export const logTypes = {
@@ -86,17 +87,19 @@ export const pipelineStages = {
   ];
   
   export const productPrices = {
-    'Indicador RTC Pro (Licencia Anual)': 290,
-    'Indicador RTC Pro (Licencia Lifetime)': 990,
-    'Club Privado (Plan Trimestral)': 75,
-    'Club Privado (Plan Anual)': 270,
-    'Instituto Royal': 3990
+    'Indicador RTC (Licencia Anual)': 290,
+    'Indicador RTC (Licencia Lifetime)': 990,
+    'Sala de Analisis (Plan Trimestral)': 75,
+    'Sala de Analisis (Plan Anual)': 270,
+    'Mentorias': 3990,
+    'Masterclass': 1164
   };
 
   export const interestOptionsWithPrices = {
-  'Indicador RTC Pro (Licencia Anual)': 290,
-  'Indicador RTC Pro (Licencia Lifetime)': 990,
-  'Club Privado (Plan Trimestral)': 75,
-  'Club Privado (Plan Anual)': 270,
-  'Instituto Royal': 3990
+  'Indicador RTC (Licencia Anual)': 290,
+  'Indicador RTC (Licencia Lifetime)': 990,
+  'Sala de Analisis (Plan Trimestral)': 75,
+  'Sala de Analisis (Plan Anual)': 270,
+  'Mentorias': 3990,
+  'Masterclass': 1164
 };

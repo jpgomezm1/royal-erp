@@ -4,7 +4,6 @@ import {
   Typography,
   Divider,
   Paper,
-  Stack,
   LinearProgress,
   ButtonBase,
   Grid

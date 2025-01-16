@@ -38,18 +38,20 @@ const initialPaymentState = {
 
 const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
   const [dealData, setDealData] = useState({
-    // --- Campos para los 5 productos ---
-    indicador_rtc_pro_anual: false,
-    indicador_rtc_pro_lifetime: false,
-    club_privado_trimestral: false,
-    club_privado_anual: false,
-    instituto_royal: false,
+    // --- Campos para los productos renombrados ---
+    indicador_rtc_anual: false,
+    indicador_rtc_lifetime: false,
+    sala_analisis_trimestral: false,
+    sala_analisis_anual: false,
+    mentorias: false,
+    masterclass: false,
 
-    fecha_inicio_indicador_rtc_pro_anual: null,
-    fecha_inicio_indicador_rtc_pro_lifetime: null,
-    fecha_inicio_club_privado_trimestral: null,
-    fecha_inicio_club_privado_anual: null,
-    fecha_inicio_instituto_royal: null,
+    fecha_inicio_indicador_rtc_anual: null,
+    fecha_inicio_indicador_rtc_lifetime: null,
+    fecha_inicio_sala_analisis_trimestral: null,
+    fecha_inicio_sala_analisis_anual: null,
+    fecha_inicio_mentorias: null,
+    fecha_inicio_masterclass: null,
 
     // Método de pago y lista de pagos
     metodo_pago: '',
@@ -65,11 +67,12 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
   // Calcula el precio base sumando los productos seleccionados
   const calculateBasePrice = () => {
     let total = 0;
-    if (dealData.indicador_rtc_pro_anual) total += 290;
-    if (dealData.indicador_rtc_pro_lifetime) total += 990;
-    if (dealData.club_privado_trimestral) total += 75;
-    if (dealData.club_privado_anual) total += 270;
-    if (dealData.instituto_royal) total += 3990;
+    if (dealData.indicador_rtc_anual) total += 290;
+    if (dealData.indicador_rtc_lifetime) total += 990;
+    if (dealData.sala_analisis_trimestral) total += 75;
+    if (dealData.sala_analisis_anual) total += 270;
+    if (dealData.mentorias) total += 3990;
+    if (dealData.masterclass) total += 1164;
     return total;
   };
 
@@ -115,31 +118,35 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
 
     // Al menos un producto seleccionado
     const anyProductSelected =
-      dealData.indicador_rtc_pro_anual ||
-      dealData.indicador_rtc_pro_lifetime ||
-      dealData.club_privado_trimestral ||
-      dealData.club_privado_anual ||
-      dealData.instituto_royal;
+      dealData.indicador_rtc_anual ||
+      dealData.indicador_rtc_lifetime ||
+      dealData.sala_analisis_trimestral ||
+      dealData.sala_analisis_anual ||
+      dealData.mentorias ||
+      dealData.masterclass;
 
     if (!anyProductSelected) {
       newErrors.products = 'Selecciona al menos un producto';
     }
 
     // Fechas de inicio según producto
-    if (dealData.indicador_rtc_pro_anual && !dealData.fecha_inicio_indicador_rtc_pro_anual) {
-      newErrors.fecha_inicio_indicador_rtc_pro_anual = 'Selecciona la fecha de inicio (Anual)';
+    if (dealData.indicador_rtc_anual && !dealData.fecha_inicio_indicador_rtc_anual) {
+      newErrors.fecha_inicio_indicador_rtc_anual = 'Selecciona la fecha de inicio (Licencia Anual)';
     }
-    if (dealData.indicador_rtc_pro_lifetime && !dealData.fecha_inicio_indicador_rtc_pro_lifetime) {
-      newErrors.fecha_inicio_indicador_rtc_pro_lifetime = 'Selecciona la fecha de inicio (Lifetime)';
+    if (dealData.indicador_rtc_lifetime && !dealData.fecha_inicio_indicador_rtc_lifetime) {
+      newErrors.fecha_inicio_indicador_rtc_lifetime = 'Selecciona la fecha de inicio (Lifetime)';
     }
-    if (dealData.club_privado_trimestral && !dealData.fecha_inicio_club_privado_trimestral) {
-      newErrors.fecha_inicio_club_privado_trimestral = 'Selecciona la fecha de inicio (Trimestral)';
+    if (dealData.sala_analisis_trimestral && !dealData.fecha_inicio_sala_analisis_trimestral) {
+      newErrors.fecha_inicio_sala_analisis_trimestral = 'Selecciona la fecha de inicio (Plan Trimestral)';
     }
-    if (dealData.club_privado_anual && !dealData.fecha_inicio_club_privado_anual) {
-      newErrors.fecha_inicio_club_privado_anual = 'Selecciona la fecha de inicio (Anual)';
+    if (dealData.sala_analisis_anual && !dealData.fecha_inicio_sala_analisis_anual) {
+      newErrors.fecha_inicio_sala_analisis_anual = 'Selecciona la fecha de inicio (Plan Anual)';
     }
-    if (dealData.instituto_royal && !dealData.fecha_inicio_instituto_royal) {
-      newErrors.fecha_inicio_instituto_royal = 'Selecciona la fecha de inicio (Instituto Royal)';
+    if (dealData.mentorias && !dealData.fecha_inicio_mentorias) {
+      newErrors.fecha_inicio_mentorias = 'Selecciona la fecha de inicio (Mentorias)';
+    }
+    if (dealData.masterclass && !dealData.fecha_inicio_masterclass) {
+      newErrors.fecha_inicio_masterclass = 'Selecciona la fecha de inicio (Masterclass)';
     }
 
     // Método de pago obligatorio
@@ -173,16 +180,18 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
       const formattedData = {
         ...dealData,
         // Convertir las fechas a ISO
-        fecha_inicio_indicador_rtc_pro_anual:
-          dealData.fecha_inicio_indicador_rtc_pro_anual?.toISO() || null,
-        fecha_inicio_indicador_rtc_pro_lifetime:
-          dealData.fecha_inicio_indicador_rtc_pro_lifetime?.toISO() || null,
-        fecha_inicio_club_privado_trimestral:
-          dealData.fecha_inicio_club_privado_trimestral?.toISO() || null,
-        fecha_inicio_club_privado_anual:
-          dealData.fecha_inicio_club_privado_anual?.toISO() || null,
-        fecha_inicio_instituto_royal:
-          dealData.fecha_inicio_instituto_royal?.toISO() || null,
+        fecha_inicio_indicador_rtc_anual:
+          dealData.fecha_inicio_indicador_rtc_anual?.toISO() || null,
+        fecha_inicio_indicador_rtc_lifetime:
+          dealData.fecha_inicio_indicador_rtc_lifetime?.toISO() || null,
+        fecha_inicio_sala_analisis_trimestral:
+          dealData.fecha_inicio_sala_analisis_trimestral?.toISO() || null,
+        fecha_inicio_sala_analisis_anual:
+          dealData.fecha_inicio_sala_analisis_anual?.toISO() || null,
+        fecha_inicio_mentorias:
+          dealData.fecha_inicio_mentorias?.toISO() || null,
+        fecha_inicio_masterclass:
+          dealData.fecha_inicio_masterclass?.toISO() || null,
 
         // Este será el monto final, sea base o custom.
         monto_total: finalAmount,
@@ -232,19 +241,19 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                 Productos
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                {/* Indicador RTC Pro (Licencia Anual) */}
+                {/* Indicador RTC (Licencia Anual) */}
                 <Box>
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={dealData.indicador_rtc_pro_anual}
+                        checked={dealData.indicador_rtc_anual}
                         onChange={() =>
                           setDealData((prev) => ({
                             ...prev,
-                            indicador_rtc_pro_anual: !prev.indicador_rtc_pro_anual,
-                            fecha_inicio_indicador_rtc_pro_anual: !prev.indicador_rtc_pro_anual
+                            indicador_rtc_anual: !prev.indicador_rtc_anual,
+                            fecha_inicio_indicador_rtc_anual: !prev.indicador_rtc_anual
                               ? null
-                              : prev.fecha_inicio_indicador_rtc_pro_anual,
+                              : prev.fecha_inicio_indicador_rtc_anual,
                           }))
                         }
                         sx={{
@@ -255,19 +264,19 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                         }}
                       />
                     }
-                    label="Indicador RTC Pro (Anual) - $290"
+                    label="Indicador RTC (Licencia Anual) - $290"
                   />
-                  {dealData.indicador_rtc_pro_anual && (
+                  {dealData.indicador_rtc_anual && (
                     <DatePicker
                       label="Fecha de inicio"
-                      value={dealData.fecha_inicio_indicador_rtc_pro_anual}
+                      value={dealData.fecha_inicio_indicador_rtc_anual}
                       onChange={(date) =>
-                        setDealData({ ...dealData, fecha_inicio_indicador_rtc_pro_anual: date })
+                        setDealData({ ...dealData, fecha_inicio_indicador_rtc_anual: date })
                       }
                       slotProps={{
                         textField: {
-                          error: !!errors.fecha_inicio_indicador_rtc_pro_anual,
-                          helperText: errors.fecha_inicio_indicador_rtc_pro_anual,
+                          error: !!errors.fecha_inicio_indicador_rtc_anual,
+                          helperText: errors.fecha_inicio_indicador_rtc_anual,
                           sx: {
                             mt: 1,
                             '& .MuiOutlinedInput-root': {
@@ -285,19 +294,19 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                   )}
                 </Box>
 
-                {/* Indicador RTC Pro (Licencia Lifetime) */}
+                {/* Indicador RTC (Licencia Lifetime) */}
                 <Box>
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={dealData.indicador_rtc_pro_lifetime}
+                        checked={dealData.indicador_rtc_lifetime}
                         onChange={() =>
                           setDealData((prev) => ({
                             ...prev,
-                            indicador_rtc_pro_lifetime: !prev.indicador_rtc_pro_lifetime,
-                            fecha_inicio_indicador_rtc_pro_lifetime: !prev.indicador_rtc_pro_lifetime
+                            indicador_rtc_lifetime: !prev.indicador_rtc_lifetime,
+                            fecha_inicio_indicador_rtc_lifetime: !prev.indicador_rtc_lifetime
                               ? null
-                              : prev.fecha_inicio_indicador_rtc_pro_lifetime,
+                              : prev.fecha_inicio_indicador_rtc_lifetime,
                           }))
                         }
                         sx={{
@@ -308,19 +317,19 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                         }}
                       />
                     }
-                    label="Indicador RTC Pro (Lifetime) - $990"
+                    label="Indicador RTC (Licencia Lifetime) - $990"
                   />
-                  {dealData.indicador_rtc_pro_lifetime && (
+                  {dealData.indicador_rtc_lifetime && (
                     <DatePicker
                       label="Fecha de inicio"
-                      value={dealData.fecha_inicio_indicador_rtc_pro_lifetime}
+                      value={dealData.fecha_inicio_indicador_rtc_lifetime}
                       onChange={(date) =>
-                        setDealData({ ...dealData, fecha_inicio_indicador_rtc_pro_lifetime: date })
+                        setDealData({ ...dealData, fecha_inicio_indicador_rtc_lifetime: date })
                       }
                       slotProps={{
                         textField: {
-                          error: !!errors.fecha_inicio_indicador_rtc_pro_lifetime,
-                          helperText: errors.fecha_inicio_indicador_rtc_pro_lifetime,
+                          error: !!errors.fecha_inicio_indicador_rtc_lifetime,
+                          helperText: errors.fecha_inicio_indicador_rtc_lifetime,
                           sx: {
                             mt: 1,
                             '& .MuiOutlinedInput-root': {
@@ -338,19 +347,19 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                   )}
                 </Box>
 
-                {/* Club Privado (Plan Trimestral) */}
+                {/* Sala de Analisis (Plan Trimestral) */}
                 <Box>
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={dealData.club_privado_trimestral}
+                        checked={dealData.sala_analisis_trimestral}
                         onChange={() =>
                           setDealData((prev) => ({
                             ...prev,
-                            club_privado_trimestral: !prev.club_privado_trimestral,
-                            fecha_inicio_club_privado_trimestral: !prev.club_privado_trimestral
+                            sala_analisis_trimestral: !prev.sala_analisis_trimestral,
+                            fecha_inicio_sala_analisis_trimestral: !prev.sala_analisis_trimestral
                               ? null
-                              : prev.fecha_inicio_club_privado_trimestral,
+                              : prev.fecha_inicio_sala_analisis_trimestral,
                           }))
                         }
                         sx={{
@@ -361,19 +370,19 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                         }}
                       />
                     }
-                    label="Club Privado (Trimestral) - $75"
+                    label="Sala de Analisis (Plan Trimestral) - $75"
                   />
-                  {dealData.club_privado_trimestral && (
+                  {dealData.sala_analisis_trimestral && (
                     <DatePicker
                       label="Fecha de inicio"
-                      value={dealData.fecha_inicio_club_privado_trimestral}
+                      value={dealData.fecha_inicio_sala_analisis_trimestral}
                       onChange={(date) =>
-                        setDealData({ ...dealData, fecha_inicio_club_privado_trimestral: date })
+                        setDealData({ ...dealData, fecha_inicio_sala_analisis_trimestral: date })
                       }
                       slotProps={{
                         textField: {
-                          error: !!errors.fecha_inicio_club_privado_trimestral,
-                          helperText: errors.fecha_inicio_club_privado_trimestral,
+                          error: !!errors.fecha_inicio_sala_analisis_trimestral,
+                          helperText: errors.fecha_inicio_sala_analisis_trimestral,
                           sx: {
                             mt: 1,
                             '& .MuiOutlinedInput-root': {
@@ -391,19 +400,19 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                   )}
                 </Box>
 
-                {/* Club Privado (Plan Anual) */}
+                {/* Sala de Analisis (Plan Anual) */}
                 <Box>
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={dealData.club_privado_anual}
+                        checked={dealData.sala_analisis_anual}
                         onChange={() =>
                           setDealData((prev) => ({
                             ...prev,
-                            club_privado_anual: !prev.club_privado_anual,
-                            fecha_inicio_club_privado_anual: !prev.club_privado_anual
+                            sala_analisis_anual: !prev.sala_analisis_anual,
+                            fecha_inicio_sala_analisis_anual: !prev.sala_analisis_anual
                               ? null
-                              : prev.fecha_inicio_club_privado_anual,
+                              : prev.fecha_inicio_sala_analisis_anual,
                           }))
                         }
                         sx={{
@@ -414,19 +423,19 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                         }}
                       />
                     }
-                    label="Club Privado (Anual) - $270"
+                    label="Sala de Analisis (Plan Anual) - $270"
                   />
-                  {dealData.club_privado_anual && (
+                  {dealData.sala_analisis_anual && (
                     <DatePicker
                       label="Fecha de inicio"
-                      value={dealData.fecha_inicio_club_privado_anual}
+                      value={dealData.fecha_inicio_sala_analisis_anual}
                       onChange={(date) =>
-                        setDealData({ ...dealData, fecha_inicio_club_privado_anual: date })
+                        setDealData({ ...dealData, fecha_inicio_sala_analisis_anual: date })
                       }
                       slotProps={{
                         textField: {
-                          error: !!errors.fecha_inicio_club_privado_anual,
-                          helperText: errors.fecha_inicio_club_privado_anual,
+                          error: !!errors.fecha_inicio_sala_analisis_anual,
+                          helperText: errors.fecha_inicio_sala_analisis_anual,
                           sx: {
                             mt: 1,
                             '& .MuiOutlinedInput-root': {
@@ -444,19 +453,19 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                   )}
                 </Box>
 
-                {/* Instituto Royal */}
+                {/* Mentorias */}
                 <Box>
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={dealData.instituto_royal}
+                        checked={dealData.mentorias}
                         onChange={() =>
                           setDealData((prev) => ({
                             ...prev,
-                            instituto_royal: !prev.instituto_royal,
-                            fecha_inicio_instituto_royal: !prev.instituto_royal
+                            mentorias: !prev.mentorias,
+                            fecha_inicio_mentorias: !prev.mentorias
                               ? null
-                              : prev.fecha_inicio_instituto_royal,
+                              : prev.fecha_inicio_mentorias,
                           }))
                         }
                         sx={{
@@ -467,19 +476,70 @@ const CloseLeadDialog = ({ open, lead, onClose, onSave }) => {
                         }}
                       />
                     }
-                    label="Instituto Royal ($3990)"
+                    label="Mentorias - $3990"
                   />
-                  {dealData.instituto_royal && (
+                  {dealData.mentorias && (
                     <DatePicker
                       label="Fecha de inicio"
-                      value={dealData.fecha_inicio_instituto_royal}
+                      value={dealData.fecha_inicio_mentorias}
                       onChange={(date) =>
-                        setDealData({ ...dealData, fecha_inicio_instituto_royal: date })
+                        setDealData({ ...dealData, fecha_inicio_mentorias: date })
                       }
                       slotProps={{
                         textField: {
-                          error: !!errors.fecha_inicio_instituto_royal,
-                          helperText: errors.fecha_inicio_instituto_royal,
+                          error: !!errors.fecha_inicio_mentorias,
+                          helperText: errors.fecha_inicio_mentorias,
+                          sx: {
+                            mt: 1,
+                            '& .MuiOutlinedInput-root': {
+                              color: '#FFFFFF',
+                              '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.23)' },
+                              '&:hover fieldset': { borderColor: '#FFFFFF' },
+                              '&.Mui-focused fieldset': { borderColor: '#00FFD1' },
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  )}
+                </Box>
+
+                {/* Masterclass */}
+                <Box>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={dealData.masterclass}
+                        onChange={() =>
+                          setDealData((prev) => ({
+                            ...prev,
+                            masterclass: !prev.masterclass,
+                            fecha_inicio_masterclass: !prev.masterclass
+                              ? null
+                              : prev.fecha_inicio_masterclass,
+                          }))
+                        }
+                        sx={{
+                          color: '#00FFD1',
+                          '&.Mui-checked': {
+                            color: '#00FFD1',
+                          },
+                        }}
+                      />
+                    }
+                    label="Masterclass - $1164"
+                  />
+                  {dealData.masterclass && (
+                    <DatePicker
+                      label="Fecha de inicio"
+                      value={dealData.fecha_inicio_masterclass}
+                      onChange={(date) =>
+                        setDealData({ ...dealData, fecha_inicio_masterclass: date })
+                      }
+                      slotProps={{
+                        textField: {
+                          error: !!errors.fecha_inicio_masterclass,
+                          helperText: errors.fecha_inicio_masterclass,
                           sx: {
                             mt: 1,
                             '& .MuiOutlinedInput-root': {
