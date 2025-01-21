@@ -136,3 +136,4 @@ const PartialPaymentDialog = ({ open, onClose, onSave, payment }) => {
 };
 
 export default PartialPaymentDialog;
+

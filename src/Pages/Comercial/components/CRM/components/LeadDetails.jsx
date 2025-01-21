@@ -17,11 +17,6 @@ import {
   TableHead,
   TableRow,
   LinearProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -35,16 +30,16 @@ import { DateTime } from 'luxon';
 
 import PartialPaymentDialog from './PartialPaymentDialog';
 
-// ----------------------------------------------------------------
-// Componente para renderizar el contenido de cada Tab
-// ----------------------------------------------------------------
+// Lee tus variables .env
+const isProduction = process.env.NODE_ENV === 'production';
+const baseUrl = isProduction 
+  ? process.env.REACT_APP_API_BASE_URL_PROD 
+  : process.env.REACT_APP_API_BASE_URL_DEV;
+
 function TabPanel({ children, value, index }) {
   return value === index ? <Box sx={{ mt: 3 }}>{children}</Box> : null;
 }
 
-// ----------------------------------------------------------------
-// LeadDetails: Muestra la info del Lead, con Tabs para general y financiera
-// ----------------------------------------------------------------
 const LeadDetails = ({ lead, onClose }) => {
   const [selectedTab, setSelectedTab] = useState(0);
 
@@ -71,26 +66,24 @@ const LeadDetails = ({ lead, onClose }) => {
   const handleSaveAbono = async (dataAbono) => {
     try {
       if (!lead.deal || !selectedPayment) return;
-
+  
       const dealId = lead.deal.id;
       const paymentId = selectedPayment.id;
-      // Ejemplo de URL: /api/deals/:deal_id/payment/:payment_id/abono
-      const response = await fetch(`/api/deals/${dealId}/payment/${paymentId}/abono`, {
+  
+      // Observamos dealId y paymentId
+      console.log("Debug -> dealId:", dealId, "paymentId:", paymentId);
+
+      // Usamos la baseUrl del .env
+      const response = await fetch(`${baseUrl}/deals/${dealId}/payment/${paymentId}/abono`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataAbono)
+        body: JSON.stringify(dataAbono),
       });
       if (!response.ok) throw new Error('Error al registrar abono');
-
-      // Respuesta devuelta: Payment.to_dict() (con transacciones actualizadas)
+  
       const updatedDealOrPayment = await response.json();
       console.log('Deal o Payment actualizado:', updatedDealOrPayment);
-
-      // Aquí, idealmente, deberías actualizar el estado "lead" con la nueva info.
-      // Ej: si el backend retornó el Payment actualizado, o el Deal completo
-      // lead.deal = updatedDealOrPayment; // si retorna el deal
-      // setLead({ ...lead }); // Forzar re-render
-
+  
       handleCloseAbonoDialog();
     } catch (error) {
       console.error('Error abono parcial:', error);
@@ -102,26 +95,21 @@ const LeadDetails = ({ lead, onClose }) => {
     try {
       if (!lead.deal) return;
       const dealId = lead.deal.id;
-
-      // Armamos un abono con el 100% del monto
       const dataAbono = {
         fecha_abono: new Date().toISOString(),
-        monto_abono: parseFloat(pago.monto) // 100% de la cuota
+        monto_abono: parseFloat(pago.monto),
       };
 
-      const response = await fetch(`/api/deals/${dealId}/payment/${pago.id}/abono`, {
+      // De nuevo, baseUrl 
+      const response = await fetch(`${baseUrl}/deals/${dealId}/payment/${pago.id}/abono`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataAbono)
+        body: JSON.stringify(dataAbono),
       });
       if (!response.ok) throw new Error('Error al registrar pago total');
 
       const updatedDealOrPayment = await response.json();
       console.log('Pago marcado como completado:', updatedDealOrPayment);
-
-      // Aquí también deberías refrescar el estado local si deseas
-      // lead.deal = updatedDealOrPayment;
-      // setLead({ ...lead });
     } catch (error) {
       console.error('Error marcando cuota como pagada en full:', error);
     }
@@ -129,20 +117,20 @@ const LeadDetails = ({ lead, onClose }) => {
 
   const getCrmStatusColor = (crmStatus) => {
     const colors = {
-      LEAD:            '#FFC107',
-      CLIENTE_INACTIVO:'#29B6F6',
-      CLIENTE_ACTIVO:  '#4CAF50',
-      EX_CLIENTE:      '#F44336',
+      LEAD: '#FFC107',
+      CLIENTE_INACTIVO: '#29B6F6',
+      CLIENTE_ACTIVO: '#4CAF50',
+      EX_CLIENTE: '#F44336',
     };
     return colors[crmStatus] || '#AAAAAA';
   };
 
   const getCrmLabel = (crmStatus) => {
     const labels = {
-      LEAD:            'Lead Potencial',
-      CLIENTE_INACTIVO:'Cliente Inactivo',
-      CLIENTE_ACTIVO:  'Cliente Activo',
-      EX_CLIENTE:      'Ex Cliente',
+      LEAD: 'Lead Potencial',
+      CLIENTE_INACTIVO: 'Cliente Inactivo',
+      CLIENTE_ACTIVO: 'Cliente Activo',
+      EX_CLIENTE: 'Ex Cliente',
     };
     return labels[crmStatus] || 'Desconocido';
   };
@@ -150,7 +138,7 @@ const LeadDetails = ({ lead, onClose }) => {
   const getInitials = (name) => {
     return name
       .split(' ')
-      .map(n => n[0])
+      .map((n) => n[0])
       .join('')
       .toUpperCase();
   };
@@ -165,18 +153,28 @@ const LeadDetails = ({ lead, onClose }) => {
   }
   const avanceGlobal = lead.deal ? (totalAbonadoGlobal / lead.deal.monto_total) * 100 : 0;
 
+  // NUEVO: Listado de los productos a mostrar en chips
+  const productList = [
+    { key: 'indicador_rtc_anual', label: 'Indicador RTC (Licencia Anual)' },
+    { key: 'indicador_rtc_lifetime', label: 'Indicador RTC (Licencia Lifetime)' },
+    { key: 'sala_analisis_trimestral', label: 'Sala de Análisis (Plan Trimestral)' },
+    { key: 'sala_analisis_anual', label: 'Sala de Análisis (Plan Anual)' },
+    { key: 'mentorias', label: 'Mentorias' },
+    { key: 'masterclass', label: 'Masterclass' },
+  ];
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Encabezado */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar 
-            sx={{ 
-              width: 56, 
+          <Avatar
+            sx={{
+              width: 56,
               height: 56,
               bgcolor: lead.crm_status === 'CLIENTE_ACTIVO' ? '#00FFD1' : '#2C2C2C',
               color: lead.crm_status === 'CLIENTE_ACTIVO' ? '#1E1E1E' : '#FFFFFF',
-              border: '2px solid #00FFD1'
+              border: '2px solid #00FFD1',
             }}
           >
             {getInitials(lead.nombre)}
@@ -192,7 +190,7 @@ const LeadDetails = ({ lead, onClose }) => {
               sx={{
                 backgroundColor: `${getCrmStatusColor(lead.crm_status)}20`,
                 color: getCrmStatusColor(lead.crm_status),
-                mt: 0.5
+                mt: 0.5,
               }}
             />
           </Box>
@@ -218,8 +216,8 @@ const LeadDetails = ({ lead, onClose }) => {
             color: '#00FFD1',
           },
           '& .MuiTabs-indicator': {
-            backgroundColor: '#00FFD1'
-          }
+            backgroundColor: '#00FFD1',
+          },
         }}
       >
         <Tab label="Información General" />
@@ -238,9 +236,7 @@ const LeadDetails = ({ lead, onClose }) => {
                   <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
                     Email
                   </Typography>
-                  <Typography sx={{ color: '#FFFFFF' }}>
-                    {lead.email}
-                  </Typography>
+                  <Typography sx={{ color: '#FFFFFF' }}>{lead.email}</Typography>
                 </Box>
               </Box>
             </Grid>
@@ -251,9 +247,7 @@ const LeadDetails = ({ lead, onClose }) => {
                   <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
                     Teléfono
                   </Typography>
-                  <Typography sx={{ color: '#FFFFFF' }}>
-                    {lead.telefono}
-                  </Typography>
+                  <Typography sx={{ color: '#FFFFFF' }}>{lead.telefono}</Typography>
                 </Box>
               </Box>
             </Grid>
@@ -268,9 +262,11 @@ const LeadDetails = ({ lead, onClose }) => {
                   '&:hover': {
                     borderColor: '#00FFD1',
                     backgroundColor: 'rgba(0, 255, 209, 0.1)',
-                  }
+                  },
                 }}
-                onClick={() => window.open(`https://wa.me/${lead.telefono.replace(/\D/g, '')}`)}
+                onClick={() =>
+                  window.open(`https://wa.me/${lead.telefono.replace(/\D/g, '')}`)
+                }
               >
                 Contactar por WhatsApp
               </Button>
@@ -290,9 +286,7 @@ const LeadDetails = ({ lead, onClose }) => {
                   <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
                     Método de Pago
                   </Typography>
-                  <Typography sx={{ color: '#FFFFFF' }}>
-                    {lead.deal.metodo_pago}
-                  </Typography>
+                  <Typography sx={{ color: '#FFFFFF' }}>{lead.deal.metodo_pago}</Typography>
                 </Grid>
                 <Grid item xs={12} sm={4}>
                   <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
@@ -313,74 +307,29 @@ const LeadDetails = ({ lead, onClose }) => {
               </Grid>
             </Paper>
 
-            {/* Productos Contratados (LOS 5 PRODUCTOS NUEVOS) */}
+            {/* NUEVO: Productos contratados en chips */}
             <Typography variant="subtitle1" sx={{ color: '#FFFFFF', mb: 1 }}>
               Productos Contratados
             </Typography>
             <Paper sx={{ p: 2, backgroundColor: '#262626' }}>
-              {/* Indicador RTC Pro (Anual) */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#FFFFFF' }}>
-                  Indicador RTC Pro (Anual):{' '}
-                  {lead.deal.indicador_rtc_pro_anual ? 'Sí' : 'No'}
-                </Typography>
-                {lead.deal.indicador_rtc_pro_anual && lead.deal.fecha_inicio_indicador_rtc_pro_anual && (
-                  <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
-                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_indicador_rtc_pro_anual).toFormat('dd/MM/yyyy')}
-                  </Typography>
-                )}
-              </Box>
-
-              {/* Indicador RTC Pro (Lifetime) */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#FFFFFF' }}>
-                  Indicador RTC Pro (Lifetime):{' '}
-                  {lead.deal.indicador_rtc_pro_lifetime ? 'Sí' : 'No'}
-                </Typography>
-                {lead.deal.indicador_rtc_pro_lifetime && lead.deal.fecha_inicio_indicador_rtc_pro_lifetime && (
-                  <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
-                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_indicador_rtc_pro_lifetime).toFormat('dd/MM/yyyy')}
-                  </Typography>
-                )}
-              </Box>
-
-              {/* Club Privado (Trimestral) */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#FFFFFF' }}>
-                  Club Privado (Trimestral):{' '}
-                  {lead.deal.club_privado_trimestral ? 'Sí' : 'No'}
-                </Typography>
-                {lead.deal.club_privado_trimestral && lead.deal.fecha_inicio_club_privado_trimestral && (
-                  <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
-                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_club_privado_trimestral).toFormat('dd/MM/yyyy')}
-                  </Typography>
-                )}
-              </Box>
-
-              {/* Club Privado (Anual) */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#FFFFFF' }}>
-                  Club Privado (Anual):{' '}
-                  {lead.deal.club_privado_anual ? 'Sí' : 'No'}
-                </Typography>
-                {lead.deal.club_privado_anual && lead.deal.fecha_inicio_club_privado_anual && (
-                  <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
-                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_club_privado_anual).toFormat('dd/MM/yyyy')}
-                  </Typography>
-                )}
-              </Box>
-
-              {/* Instituto Royal */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#FFFFFF' }}>
-                  Instituto Royal:{' '}
-                  {lead.deal.instituto_royal ? 'Sí' : 'No'}
-                </Typography>
-                {lead.deal.instituto_royal && lead.deal.fecha_inicio_instituto_royal && (
-                  <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
-                    Inicio: {DateTime.fromISO(lead.deal.fecha_inicio_instituto_royal).toFormat('dd/MM/yyyy')}
-                  </Typography>
-                )}
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {productList.map((product) => {
+                  // Solo mostramos chip si el Deal tiene ese producto = true
+                  if (lead.deal[product.key]) {
+                    return (
+                      <Chip
+                        key={product.key}
+                        label={product.label}
+                        sx={{
+                          backgroundColor: 'rgba(0,255,209,0.2)',
+                          color: '#00FFD1',
+                          fontWeight: 'bold',
+                        }}
+                      />
+                    );
+                  }
+                  return null;
+                })}
               </Box>
             </Paper>
           </Box>
@@ -395,11 +344,11 @@ const LeadDetails = ({ lead, onClose }) => {
             lead.logs.map((log) => (
               <Paper
                 key={log.id}
-                sx={{ 
-                  p: 2, 
-                  mb: 2, 
+                sx={{
+                  p: 2,
+                  mb: 2,
                   backgroundColor: '#262626',
-                  border: '1px solid rgba(0, 255, 209, 0.1)'
+                  border: '1px solid rgba(0, 255, 209, 0.1)',
                 }}
               >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -415,9 +364,7 @@ const LeadDetails = ({ lead, onClose }) => {
                     {DateTime.fromISO(log.date).toFormat('dd/MM/yyyy HH:mm')}
                   </Typography>
                 </Box>
-                <Typography sx={{ color: '#FFFFFF', mb: 1 }}>
-                  {log.description}
-                </Typography>
+                <Typography sx={{ color: '#FFFFFF', mb: 1 }}>{log.description}</Typography>
                 <Typography variant="body2" sx={{ color: '#00FFD1' }}>
                   Resultado: {log.outcome}
                 </Typography>
@@ -447,8 +394,8 @@ const LeadDetails = ({ lead, onClose }) => {
                 borderRadius: 2,
                 backgroundColor: 'rgba(255,255,255,0.1)',
                 '& .MuiLinearProgress-bar': {
-                  backgroundColor: '#00FFD1'
-                }
+                  backgroundColor: '#00FFD1',
+                },
               }}
             />
             <Typography variant="body2" sx={{ color: '#FFFFFF', mt: 1 }}>
@@ -465,11 +412,11 @@ const LeadDetails = ({ lead, onClose }) => {
 
             {/* Tabla de Pagos */}
             <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
-              <TableContainer 
-                component={Paper} 
-                sx={{ 
+              <TableContainer
+                component={Paper}
+                sx={{
                   backgroundColor: '#262626',
-                  border: '1px solid rgba(0, 255, 209, 0.1)'
+                  border: '1px solid rgba(0, 255, 209, 0.1)',
                 }}
               >
                 <Table>
@@ -486,16 +433,17 @@ const LeadDetails = ({ lead, onClose }) => {
                   </TableHead>
                   <TableBody>
                     {lead.deal.pagos.map((pago) => {
-                      const sumAbonos = pago.transactions?.reduce((acc, tx) => acc + tx.monto_abono, 0) || 0;
+                      const sumAbonos =
+                        pago.transactions?.reduce((acc, tx) => acc + tx.monto_abono, 0) || 0;
                       const progresoPago = (sumAbonos / pago.monto) * 100;
 
                       return (
-                        <TableRow 
+                        <TableRow
                           key={pago.id}
                           sx={{
                             '&:hover': {
-                              backgroundColor: 'rgba(255, 255, 255, 0.05)'
-                            }
+                              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                            },
                           }}
                         >
                           <TableCell sx={{ color: '#FFFFFF' }}>
@@ -505,11 +453,12 @@ const LeadDetails = ({ lead, onClose }) => {
                             ${pago.monto?.toLocaleString()}
                           </TableCell>
                           <TableCell sx={{ color: '#FFFFFF' }}>
+                            {/* Por si manejas un estado textual de la cuota */}
                             <Chip
                               label={pago.estado}
                               size="small"
                               sx={{
-                                backgroundColor: 
+                                backgroundColor:
                                   pago.estado === 'pagada'
                                     ? 'rgba(76, 175, 80, 0.2)'
                                     : pago.estado === 'vencida'
@@ -517,7 +466,7 @@ const LeadDetails = ({ lead, onClose }) => {
                                     : pago.estado === 'proxima'
                                     ? 'rgba(255, 193, 7, 0.2)'
                                     : 'rgba(255, 255, 255, 0.1)',
-                                color: 
+                                color:
                                   pago.estado === 'pagada'
                                     ? '#4CAF50'
                                     : pago.estado === 'vencida'
@@ -525,7 +474,7 @@ const LeadDetails = ({ lead, onClose }) => {
                                     : pago.estado === 'proxima'
                                     ? '#FFC107'
                                     : '#FFFFFF',
-                                textTransform: 'capitalize'
+                                textTransform: 'capitalize',
                               }}
                             />
                           </TableCell>
@@ -538,15 +487,18 @@ const LeadDetails = ({ lead, onClose }) => {
                                 borderRadius: 2,
                                 backgroundColor: 'rgba(255,255,255,0.1)',
                                 '& .MuiLinearProgress-bar': {
-                                  backgroundColor: '#00FFD1'
-                                }
+                                  backgroundColor: '#00FFD1',
+                                },
                               }}
                             />
                             <Typography variant="body2" sx={{ color: '#AAAAAA', mt: 0.5 }}>
                               {`$${sumAbonos.toLocaleString()} / $${pago.monto.toLocaleString()}`}
                             </Typography>
                           </TableCell>
-                          <TableCell align="right" sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                          <TableCell
+                            align="right"
+                            sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}
+                          >
                             <Button
                               variant="outlined"
                               size="small"
@@ -555,8 +507,8 @@ const LeadDetails = ({ lead, onClose }) => {
                                 borderColor: 'rgba(255,255,255,0.3)',
                                 '&:hover': {
                                   borderColor: '#00FFD1',
-                                  backgroundColor: 'rgba(0, 255, 209, 0.1)'
-                                }
+                                  backgroundColor: 'rgba(0, 255, 209, 0.1)',
+                                },
                               }}
                               onClick={() => handleOpenAbonoDialog(pago)}
                             >
@@ -573,7 +525,7 @@ const LeadDetails = ({ lead, onClose }) => {
                                   color: '#1E1E1E',
                                   '&:hover': {
                                     backgroundColor: '#00CCB7',
-                                  }
+                                  },
                                 }}
                                 onClick={() => handleMarkAsPaidInFull(pago)}
                               >

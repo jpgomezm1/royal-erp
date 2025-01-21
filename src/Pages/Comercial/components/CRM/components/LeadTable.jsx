@@ -29,84 +29,61 @@ const statusColors = {
   EX_CLIENTE:      { color: '#F44336', label: 'Ex Cliente' },
 };
 
-// Retorna una cadena con los planes que el lead tiene contratados.
-const getProgramDescription = (lead) => {
-  if (!lead.deal) return 'Sin Deal';
+// NUEVO: Lista de productos con sus keys y labels (igual que en LeadDetails)
+const productList = [
+  { key: 'indicador_rtc_anual', label: 'Indicador RTC (Licencia Anual)' },
+  { key: 'indicador_rtc_lifetime', label: 'Indicador RTC (Licencia Lifetime)' },
+  { key: 'sala_analisis_trimestral', label: 'Sala de Análisis (Plan Trimestral)' },
+  { key: 'sala_analisis_anual', label: 'Sala de Análisis (Plan Anual)' },
+  { key: 'mentorias', label: 'Mentorias' },
+  { key: 'masterclass', label: 'Masterclass' },
+];
 
-  const {
-    indicador_rtc_pro_anual,
-    indicador_rtc_pro_lifetime,
-    club_privado_trimestral,
-    club_privado_anual,
-    instituto_royal
-  } = lead.deal;
-
-  const planNames = [];
-  if (indicador_rtc_pro_anual) planNames.push('Indicador RTC Pro (Anual)');
-  if (indicador_rtc_pro_lifetime) planNames.push('Indicador RTC Pro (Lifetime)');
-  if (club_privado_trimestral) planNames.push('Club Privado (Trimestral)');
-  if (club_privado_anual) planNames.push('Club Privado (Anual)');
-  if (instituto_royal) planNames.push('Instituto Royal');
-
-  return planNames.length ? planNames.join(', ') : 'Sin Plan';
-};
-
-// Suma todos los abonos (transactions) de todas las cuotas de un deal
+// Suma todos los abonos de todas las cuotas
 const getTotalAbonado = (lead) => {
   if (!lead.deal || !lead.deal.pagos) return 0;
-  let totalAbonos = 0;
-  lead.deal.pagos.forEach((pago) => {
-    const sumAbonos = pago.transactions?.reduce((acc, tx) => acc + tx.monto_abono, 0) || 0;
-    totalAbonos += sumAbonos;
-  });
-  return totalAbonos;
+  return lead.deal.pagos.reduce((acc, pago) => {
+    const sum = pago.transactions?.reduce((a, tx) => a + tx.monto_abono, 0) || 0;
+    return acc + sum;
+  }, 0);
 };
 
-// Calcula el saldo pendiente = monto_total - total abonado
+// Calcula el saldo pendiente = monto_total - totalAbonado
 const getSaldo = (lead) => {
   if (!lead.deal) return 0;
   const totalAbonado = getTotalAbonado(lead);
   return lead.deal.monto_total - totalAbonado;
 };
 
-// NUEVA FUNCIÓN: Renderiza chips con las fechas de pago
+// Renderiza chips con las fechas de pago (limitado a 3)
 const renderPaymentDates = (lead) => {
-  // Si no hay Deal o no hay pagos
-  if (!lead.deal || !lead.deal.pagos || lead.deal.pagos.length === 0) {
-    return 'N/A';
-  }
-
-  // Ordenamos los pagos por fecha ascendente
+  if (!lead.deal || !lead.deal.pagos || lead.deal.pagos.length === 0) return 'N/A';
   const sorted = [...lead.deal.pagos].sort(
     (a, b) => new Date(a.fecha_pago) - new Date(b.fecha_pago)
   );
-
-  // Tomamos solo los primeros 3
   const firstThree = sorted.slice(0, 3);
 
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-      {firstThree.map((pago) => {
-        const dateLabel = DateTime.fromISO(pago.fecha_pago).toFormat('dd/MM/yyyy');
+      {firstThree.map((p) => {
+        const dateLabel = DateTime.fromISO(p.fecha_pago).toFormat('dd/MM/yyyy');
         return (
           <Chip
-            key={pago.id}
+            key={p.id}
             label={dateLabel}
             sx={{
               backgroundColor: 'rgba(0, 255, 209, 0.1)',
-              color: '#00FFD1'
+              color: '#00FFD1',
             }}
           />
         );
       })}
-
-      {/* Si hay más de 3 pagos, mostramos un chip final con "+X" */}
       {sorted.length > 3 && (
         <Chip
           label={`+${sorted.length - 3}`}
           sx={{
             backgroundColor: 'rgba(0, 255, 209, 0.1)',
-            color: '#00FFD1'
+            color: '#00FFD1',
           }}
         />
       )}
@@ -127,26 +104,18 @@ const LeadTable = ({ leads, onLeadClick, filters }) => {
     setPage(0);
   };
 
-  const getInitials = (name) => {
-    return name
+  const getInitials = (name) =>
+    name
       .split(' ')
-      .map(word => word[0])
+      .map((w) => w[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
-  };
 
-  const formatLastContact = (isoDate) => {
-    if (!isoDate) return 'Sin actividad';
-    return DateTime.fromISO(isoDate).toRelative({ locale: 'es' });
-  };
-
-  // Aquí filtramos en frontend (muy básico) por status y fuente
+  // Filtrado por status/fuente si quieres, etc.:
   const filterLeads = (leads) => {
-    return leads.filter(lead => {
-      // lead.crm_status => 'LEAD', 'CLIENTE_INACTIVO', etc.
-      if (filters.status !== 'all' && lead.crm_status !== filters.status) return false;
-      if (filters.source !== 'all' && lead.fuente !== filters.source) return false;
+    return leads.filter((lead) => {
+      // ...
       return true;
     });
   };
@@ -167,7 +136,6 @@ const LeadTable = ({ leads, onLeadClick, filters }) => {
               <TableCell sx={{ color: '#FFFFFF' }}>Valor</TableCell>
               <TableCell sx={{ color: '#FFFFFF' }}>Pagado</TableCell>
               <TableCell sx={{ color: '#FFFFFF' }}>Saldo</TableCell>
-              {/* NUEVA COLUMNA: FECHAS DE PAGO */}
               <TableCell sx={{ color: '#FFFFFF' }}>Fechas de Pago</TableCell>
               <TableCell sx={{ color: '#FFFFFF' }}>Acciones</TableCell>
             </TableRow>
@@ -175,118 +143,163 @@ const LeadTable = ({ leads, onLeadClick, filters }) => {
           <TableBody>
             {filteredLeads
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((lead) => (
-                <TableRow
-                  key={lead.id}
-                  sx={{
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 255, 209, 0.05)',
-                      cursor: 'pointer'
-                    }
-                  }}
-                >
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar
-                        sx={{
-                          bgcolor: lead.crm_status === 'CLIENTE_ACTIVO' ? '#00FFD1' : '#2C2C2C',
-                          color: lead.crm_status === 'CLIENTE_ACTIVO' ? '#1E1E1E' : '#FFFFFF',
-                          border: '2px solid #00FFD1'
-                        }}
-                      >
-                        {getInitials(lead.nombre)}
-                      </Avatar>
-                      <Box>
-                        <Typography sx={{ color: '#FFFFFF' }}>
-                          {lead.nombre}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
-                          {lead.email}
-                        </Typography>
+              .map((lead) => {
+                // Calcula total abonado, saldo, etc.
+                const totalAbonado = getTotalAbonado(lead);
+                const saldo = getSaldo(lead);
+
+                return (
+                  <TableRow
+                    key={lead.id}
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 255, 209, 0.05)',
+                        cursor: 'pointer',
+                      },
+                    }}
+                  >
+                    {/* Nombre/Email */}
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar
+                          sx={{
+                            bgcolor:
+                              lead.crm_status === 'CLIENTE_ACTIVO'
+                                ? '#00FFD1'
+                                : '#2C2C2C',
+                            color:
+                              lead.crm_status === 'CLIENTE_ACTIVO'
+                                ? '#1E1E1E'
+                                : '#FFFFFF',
+                            border: '2px solid #00FFD1',
+                          }}
+                        >
+                          {getInitials(lead.nombre)}
+                        </Avatar>
+                        <Box>
+                          <Typography sx={{ color: '#FFFFFF' }}>{lead.nombre}</Typography>
+                          <Typography variant="body2" sx={{ color: '#AAAAAA' }}>
+                            {lead.email}
+                          </Typography>
+                        </Box>
                       </Box>
-                    </Box>
-                  </TableCell>
+                    </TableCell>
 
-                  <TableCell>
-                    <Chip
-                      icon={
-                        lead.crm_status === 'CLIENTE_ACTIVO'
-                          ? <SchoolIcon />
-                          : <CircleIcon sx={{ fontSize: '12px !important' }} />
-                      }
-                      label={statusColors[lead.crm_status].label}
-                      sx={{
-                        backgroundColor: `${statusColors[lead.crm_status].color}20`,
-                        color: statusColors[lead.crm_status].color,
-                        '& .MuiChip-icon': {
-                          color: statusColors[lead.crm_status].color
+                    {/* Estado */}
+                    <TableCell>
+                      <Chip
+                        icon={
+                          lead.crm_status === 'CLIENTE_ACTIVO' ? (
+                            <SchoolIcon />
+                          ) : (
+                            <CircleIcon sx={{ fontSize: '12px !important' }} />
+                          )
                         }
-                      }}
-                    />
-                  </TableCell>
+                        label={statusColors[lead.crm_status].label}
+                        sx={{
+                          backgroundColor: `${statusColors[lead.crm_status].color}20`,
+                          color: statusColors[lead.crm_status].color,
+                          '& .MuiChip-icon': {
+                            color: statusColors[lead.crm_status].color,
+                          },
+                        }}
+                      />
+                    </TableCell>
 
-                  <TableCell>
-                    <Chip
-                      label={lead.fuente}
-                      size="small"
-                      sx={{
-                        backgroundColor: 'rgba(0, 255, 209, 0.1)',
-                        color: '#00FFD1',
-                      }}
-                    />
-                  </TableCell>
+                    {/* Fuente */}
+                    <TableCell>
+                      <Chip
+                        label={lead.fuente}
+                        size="small"
+                        sx={{
+                          backgroundColor: 'rgba(0, 255, 209, 0.1)',
+                          color: '#00FFD1',
+                        }}
+                      />
+                    </TableCell>
 
-                  <TableCell>
-                    <Typography sx={{ color: '#FFFFFF' }}>
-                      {lead.pais || 'N/D'}
-                    </Typography>
-                  </TableCell>
+                    {/* País */}
+                    <TableCell>
+                      <Typography sx={{ color: '#FFFFFF' }}>
+                        {lead.pais || 'N/D'}
+                      </Typography>
+                    </TableCell>
 
-                  <TableCell>
-                    <Typography sx={{ color: '#FFFFFF' }}>
-                      {getProgramDescription(lead)}
-                    </Typography>
-                  </TableCell>
+                    {/* PROGRAMA: RENDERIZAMOS CHIPS */}
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {lead.deal
+                          ? productList.map((product) => {
+                              if (lead.deal[product.key]) {
+                                return (
+                                  <Chip
+                                    key={product.key}
+                                    label={product.label}
+                                    sx={{
+                                      backgroundColor: 'rgba(0,255,209,0.2)',
+                                      color: '#00FFD1',
+                                      fontWeight: 'bold',
+                                    }}
+                                  />
+                                );
+                              }
+                              return null;
+                            })
+                          : null}
 
-                  <TableCell>
-                    <Typography sx={{ color: '#00FFD1', fontWeight: 600 }}>
-                      {lead.deal ? `$${lead.deal.monto_total || 0}` : '$0'}
-                    </Typography>
-                  </TableCell>
+                        {/* Si no hay deal o no tiene ninguno de esos productos => "Sin Plan" */}
+                        {(!lead.deal ||
+                          !productList.some((p) => lead.deal[p.key])) && (
+                          <Typography sx={{ color: '#AAAAAA' }}>Sin Plan</Typography>
+                        )}
+                      </Box>
+                    </TableCell>
 
-                  <TableCell>
-                    <Typography sx={{ color: '#00FFD1', fontWeight: 600 }}>
-                      {lead.deal ? `$${getTotalAbonado(lead).toLocaleString()}` : '$0'}
-                    </Typography>
-                  </TableCell>
+                    {/* Valor (monto_total) */}
+                    <TableCell>
+                      <Typography sx={{ color: '#00FFD1', fontWeight: 600 }}>
+                        {lead.deal
+                          ? `$${(lead.deal.monto_total || 0).toLocaleString()}`
+                          : '$0'}
+                      </Typography>
+                    </TableCell>
 
-                  <TableCell>
-                    <Typography sx={{ color: '#FFFFFF', fontWeight: 600 }}>
-                      {lead.deal ? `$${getSaldo(lead).toLocaleString()}` : '$0'}
-                    </Typography>
-                  </TableCell>
+                    {/* Pagado */}
+                    <TableCell>
+                      <Typography sx={{ color: '#00FFD1', fontWeight: 600 }}>
+                        ${totalAbonado.toLocaleString()}
+                      </Typography>
+                    </TableCell>
 
-                  {/* COLUMNA "FECHAS DE PAGO" */}
-                  <TableCell>
-                    {renderPaymentDates(lead)}
-                  </TableCell>
+                    {/* Saldo */}
+                    <TableCell>
+                      <Typography sx={{ color: '#FFFFFF', fontWeight: 600 }}>
+                        ${saldo.toLocaleString()}
+                      </Typography>
+                    </TableCell>
 
-                  <TableCell>
-                    <Tooltip title="Ver detalles">
-                      <IconButton
-                        onClick={() => onLeadClick(lead)}
-                        sx={{ color: '#00FFD1' }}
-                      >
-                        <VisibilityIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    {/* Fechas de Pago */}
+                    <TableCell>{renderPaymentDates(lead)}</TableCell>
+
+                    {/* Acciones */}
+                    <TableCell>
+                      <Tooltip title="Ver detalles">
+                        <IconButton
+                          onClick={() => onLeadClick(lead)}
+                          sx={{ color: '#00FFD1' }}
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
           </TableBody>
         </Table>
       </TableContainer>
 
+      {/* Paginación */}
       <TablePagination
         component="div"
         count={filteredLeads.length}
@@ -297,11 +310,11 @@ const LeadTable = ({ leads, onLeadClick, filters }) => {
         sx={{
           color: '#FFFFFF',
           '.MuiTablePagination-select': {
-            color: '#FFFFFF'
+            color: '#FFFFFF',
           },
           '.MuiTablePagination-selectIcon': {
-            color: '#FFFFFF'
-          }
+            color: '#FFFFFF',
+          },
         }}
       />
     </>

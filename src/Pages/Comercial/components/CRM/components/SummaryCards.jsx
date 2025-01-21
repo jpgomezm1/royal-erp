@@ -79,7 +79,7 @@ const SummaryCards = ({ leads }) => {
   ];
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={3} sx={{ mt: 2 }}>
       {cards.map((card, index) => (
         <Grid item xs={12} sm={6} md={3} key={index}>
           <Card sx={{ 

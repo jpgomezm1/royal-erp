@@ -386,3 +386,34 @@ export const resultadosService = {
     return response.json();
   }
 };
+
+
+export const legacyClientService = {
+  getAllLegacyClients: async () => {
+    const res = await fetch(`${API_BASE_URL}/legacy/`);
+    if (!res.ok) throw new Error('Error fetching legacy clients');
+    return res.json();
+  },
+
+  createLegacyClient: async (data) => {
+    const res = await fetch(`${API_BASE_URL}/legacy/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Error creating legacy client');
+    return res.json();
+  },
+
+  addPayment: async (clientId, data) => {
+    const res = await fetch(`${API_BASE_URL}/legacy/${clientId}/payment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Error adding payment');
+    return res.json();
+  },
+  
+  // etc. (bulkImport if you want to call from UI)
+};
