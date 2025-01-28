@@ -396,6 +396,9 @@ export const legacyClientService = {
   },
 
   createLegacyClient: async (data) => {
+    // data = {
+    //   nombre, pais, total_comprado, metodo_pago, notas, pagado_inicial, ...
+    // }
     const res = await fetch(`${API_BASE_URL}/legacy/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -406,6 +409,7 @@ export const legacyClientService = {
   },
 
   addPayment: async (clientId, data) => {
+    // data = { fecha_abono, monto_abono, notas, ... }
     const res = await fetch(`${API_BASE_URL}/legacy/${clientId}/payment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -414,6 +418,16 @@ export const legacyClientService = {
     if (!res.ok) throw new Error('Error adding payment');
     return res.json();
   },
-  
-  // etc. (bulkImport if you want to call from UI)
+
+  // NUEVO: para actualizar un cliente existente
+  updateLegacyClient: async (clientId, data) => {
+    // data = { nombre, pais, total_comprado, metodo_pago, notas, ... }
+    const res = await fetch(`${API_BASE_URL}/legacy/${clientId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Error updating legacy client');
+    return res.json();
+  },
 };

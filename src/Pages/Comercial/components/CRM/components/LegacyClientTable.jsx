@@ -1,3 +1,4 @@
+// LegacyClientTable.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -12,7 +13,7 @@ import {
   IconButton,
   TablePagination,
   CircularProgress,
-  Fade,               // Mejora: animación de Fade
+  Fade
 } from '@mui/material';
 import { Visibility as VisibilityIcon } from '@mui/icons-material';
 import { legacyClientService } from '../../../../../services/api';
@@ -50,7 +51,7 @@ const LegacyClientTable = ({ onSelectClient }) => {
   };
 
   return (
-    <Fade in={true} timeout={500} /* Mejora: pequeña animación de Fade */>
+    <Fade in={true} timeout={500}>
       <Box sx={{ width: '100%' }}>
         {/* Encabezado */}
         <Typography variant="h6" sx={{ color: '#FFFFFF', mb: 2, fontWeight: 600 }}>
@@ -86,6 +87,7 @@ const LegacyClientTable = ({ onSelectClient }) => {
                   >
                     <TableCell>Nombre</TableCell>
                     <TableCell>País</TableCell>
+                    <TableCell>Método de Pago</TableCell> {/* NUEVO */}
                     <TableCell>Total Comprado</TableCell>
                     <TableCell>Total Pagado</TableCell>
                     <TableCell>Saldo</TableCell>
@@ -110,6 +112,10 @@ const LegacyClientTable = ({ onSelectClient }) => {
                         </TableCell>
                         <TableCell sx={{ color: '#FFFFFF' }}>
                           {client.pais || 'N/D'}
+                        </TableCell>
+                        {/* Muestra metodo_pago */}
+                        <TableCell sx={{ color: '#FFFFFF' }}>
+                          {client.metodo_pago || 'desconocido'}
                         </TableCell>
                         <TableCell sx={{ color: '#00FFD1', fontWeight: 600 }}>
                           ${client.total_comprado.toLocaleString()}
@@ -153,7 +159,7 @@ const LegacyClientTable = ({ onSelectClient }) => {
                 '.MuiTablePagination-selectIcon': {
                   color: '#FFFFFF',
                 },
-                backgroundColor: '#1E1E1E', // pequeño contraste en la zona de paginación
+                backgroundColor: '#1E1E1E',
               }}
             />
           </Paper>
