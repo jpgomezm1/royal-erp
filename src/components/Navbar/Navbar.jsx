@@ -102,18 +102,6 @@ const Navbar = ({ onLogout }) => {
               >
                 Royal Markets
               </Typography>
-              {user && (
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    color: '#FFFFFF',
-                    opacity: 0.7,
-                    mt: 1
-                  }}
-                >
-                  {user.nombre}
-                </Typography>
-              )}
             </Box>
           </Link>
         </Box>
